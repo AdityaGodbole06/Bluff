@@ -145,22 +145,30 @@
     height: 100vh;
   }
   
+  .game-screen {
+    display: flex;
+    flex-direction: column;
+    height: 100vh; /* Ensure it takes the full height of the viewport */
+    padding: 20px;
+  }
+  
   .player-list {
-    position: absolute;
-    top: 10px;
-    right: 800px; /* Adjust this value as needed */
-    background: rgba(0, 123, 255, 0.2); /* Updated for better visibility */
+    background: rgba(0, 123, 255, 0.2);
     border: 1px solid #ccc;
-    padding: 20px; /* Increased padding for better spacing */
+    padding: 20px;
     border-radius: 5px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    width: 300px; /* Increased width */
-    font-size: 18px; /* Increased font size */
+    width: 300px;
+    font-size: 18px;
+    margin-bottom: 20px;
+    position: absolute; /* Absolute positioning to place it in the top left */
+    top: 20px;
+    left: 20px;
   }
   
   .player-list ul {
-    list-style-type: disc; /* Set list style to bullets (disc) */
-    padding-left: 20px; /* Adjust left padding for better alignment */
+    list-style-type: disc;
+    padding-left: 20px;
   }
   
   .player-list li {
@@ -168,46 +176,35 @@
     margin-bottom: 5px;
   }
   
-  .player-cards {
-    background: #f0f0f0;
+  .player-cards-section {
+    background: rgba(0, 123, 255, 0.2);
+    border: 1px solid #ccc;
     padding: 10px;
     border-radius: 5px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    margin-bottom: 10px;
-  }
-
-  .player-cards h3 {
-    font-size: 18px;
-    margin-bottom: 10px;
-  }
-
-  .player-cards ul {
-    list-style-type: disc; /* Set list style to bullets (disc) */
-    padding-left: 20px; /* Adjust left padding for better alignment */
-  }
-
-  .player-cards li {
-    font-size: 16px;
-    margin-bottom: 5px;
-  }
-
-  .game-screen {
-    display: flex;
-    flex-wrap: wrap;
-  }
-
-  .cards-container {
-    margin-top: 20px;
+    width: 80%; /* Reduced width */
+    height: 35%; /* Increased height */
+    position: absolute; /* Absolute positioning to place it at the bottom middle */
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%); /* Center horizontally */
   }
   
-  .cards-list {
+  .player-cards-section h3 {
+    font-size: 18px;
+    margin-bottom: 10px;
+    text-align: center; /* Center the heading text */
+  }
+  
+  .cards-container {
     display: flex;
     gap: 10px;
     flex-wrap: wrap;
+    justify-content: center;
   }
   
   .card {
-    background: #f8f9fa;
+    background: rgba(0, 123, 255, 0.2);
     border: 1px solid #dee2e6;
     padding: 10px;
     border-radius: 5px;
