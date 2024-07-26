@@ -14,6 +14,7 @@ export default function App() {
   const [isLeader, setIsLeader] = useState(false);
   const [gameStarted, setGameStarted] = useState(false); // State to track if the game has started
   const [playerCards, setPlayerCards] = useState([]);
+  const [centerStack, setCenterStack] = useState([]);
   const [centerCard, setCenterCard] = useState(null);
   const socket = io(API_URL);
 
@@ -84,6 +85,7 @@ export default function App() {
       console.log("Game started event received");
       setPlayerCards(cards);
       setCenterCard(centerCard);
+      setCenterStack([centerCard]);
       setGameStarted(true);
 
     });
@@ -157,7 +159,7 @@ export default function App() {
           </div>
         )
       ) : (
-        <GameScreen players={players} playerCards={playerCards} centerCard={centerCard} /> // Pass playerCards prop to GameScreen
+        <GameScreen players={players} playerCards={playerCards} centerCard={centerCard} centerStack={centerStack}        /> // Pass playerCards prop to GameScreen
       )}
     </div>
   );
