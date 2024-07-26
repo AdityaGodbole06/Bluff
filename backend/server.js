@@ -58,18 +58,19 @@ io.on("connection", (socket) => {
       console.log("Player joined room:", roomCode, "Player:", playerName); // Log player joining
     });
   
-    socket.on("start-game", ({ roomCode, playersCards }) => {
+    socket.on("start-game", ({ roomCode, playersCards, centerCard }) => {
       // Send the relevant cards to each player
       Object.keys(playersCards).forEach(playerName => {
         const playerSocketId = getPlayerSocketId(playerName); // Get the socket ID of the player
         if (playerSocketId) {
-          io.to(playerSocketId).emit("game-started", { cards: playersCards[playerName] });
+          io.to(playerSocketId).emit("game-started", { cards: playersCards[playerName], centerCard });
         } else {
           console.error("Socket ID not found for player:", playerName);
         }
       });
       console.log("Game started for room:", roomCode); // Log game start event
     });
+    
   
     socket.on("disconnect", () => {
       // Remove the player from the map when they disconnect

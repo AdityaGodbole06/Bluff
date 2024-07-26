@@ -14,6 +14,7 @@ export default function App() {
   const [isLeader, setIsLeader] = useState(false);
   const [gameStarted, setGameStarted] = useState(false); // State to track if the game has started
   const [playerCards, setPlayerCards] = useState([]);
+  const [centerCard, setCenterCard] = useState(null);
   const socket = io(API_URL);
 
   const deck = [
@@ -79,10 +80,12 @@ export default function App() {
   }, [roomCode]);
   
   useEffect(() => {
-    socket.on("game-started", ({ cards }) => {
-      console.log("Game started event received"); // Log game started event
-      setPlayerCards(cards); // Set the player's cards
-      setGameStarted(true); // Set the gameStarted state to true
+    socket.on("game-started", ({ cards, centerCard }) => {
+      console.log("Game started event received");
+      setPlayerCards(cards);
+      setCenterCard(centerCard);
+      setGameStarted(true);
+
     });
   }, [socket]);
 
@@ -104,12 +107,14 @@ export default function App() {
       playersCards[player] = [];
     });
 
+    const centerCard = shuffledDeck.pop();
+
     shuffledDeck.forEach((card, index) => {
       const player = players[index % numPlayers];
       playersCards[player].push(card);
     });
 
-    socket.emit("start-game", { roomCode, playersCards });
+    socket.emit("start-game", { roomCode, playersCards, centerCard });
   };
 
   return (
@@ -152,7 +157,7 @@ export default function App() {
           </div>
         )
       ) : (
-        <GameScreen players={players} playerCards={playerCards} /> // Pass playerCards prop to GameScreen
+        <GameScreen players={players} playerCards={playerCards} centerCard={centerCard} /> // Pass playerCards prop to GameScreen
       )}
     </div>
   );

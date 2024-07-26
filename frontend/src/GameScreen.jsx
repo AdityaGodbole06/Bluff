@@ -3,7 +3,7 @@ import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import PlayerCards from "./PlayerCards";
 
-export default function GameScreen({ players, playerCards }) {
+export default function GameScreen({ players, playerCards, centerCard }) {
   return (
     <div className="game-screen">
       <div>
@@ -14,6 +14,9 @@ export default function GameScreen({ players, playerCards }) {
               <li key={index}>{player}</li>
             ))}
           </ul>
+        </div>
+        <div className="center-card">
+          {centerCard}
         </div>
         <div className="player-cards-section">
           <h3>Your Cards</h3>
