@@ -15,8 +15,9 @@ export default function App() {
   const [gameStarted, setGameStarted] = useState(false); // State to track if the game has started
   const [playerCards, setPlayerCards] = useState([]);
   const [centerStack, setCenterStack] = useState([]);
+  const [currentTurnPlayer, setCurrentTurnPlayer] = useState([]);
   const [centerCard, setCenterCard] = useState(null);
-  const socket = io(API_URL);
+  const socket = io.connect(API_URL);
 
   const deck = [
     "Ace of Spades", "2 of Spades", "3 of Spades", "4 of Spades", "5 of Spades", "6 of Spades", "7 of Spades", "8 of Spades", "9 of Spades", "10 of Spades", "Jack of Spades", "Queen of Spades", "King of Spades",
@@ -31,7 +32,6 @@ export default function App() {
       if (playerName.trim()) {
         const response = await axios.post(`${API_URL}/create-room`, { playerName });
         setRoomCode(response.data.roomCode);
-        setPlayerName("");
         setIsLeader(true); // The player who creates the room is the leader
         socket.emit("join-room", { roomCode: response.data.roomCode, playerName });
         console.log("Room created with code:", response.data.roomCode);
@@ -49,7 +49,6 @@ export default function App() {
         const response = await axios.post(`${API_URL}/join-room`, { playerName, roomCode: code });
         if (response.data.success) {
           setRoomCode(code);
-          setPlayerName("");
           socket.emit("join-room", { roomCode: code, playerName });
           console.log("Joined room with code:", code);
         } else {
@@ -81,15 +80,22 @@ export default function App() {
   }, [roomCode]);
   
   useEffect(() => {
-    socket.on("game-started", ({ cards, centerCard }) => {
+    socket.on("game-started", ({ cards, centerCard, currentTurnPlayer }) => {
       console.log("Game started event received");
       setPlayerCards(cards);
       setCenterCard(centerCard);
       setCenterStack([centerCard]);
+      setCurrentTurnPlayer(currentTurnPlayer);
       setGameStarted(true);
+    });
 
+    socket.on("player-joined", ({ roomCode, playerName }) => {
+      console.log("HELLO " + playerName + " to " + roomCode);
     });
   }, [socket]);
+
+ 
+
 
   const shuffleDeck = (deck) => {
     const shuffledDeck = deck.slice();
@@ -116,7 +122,8 @@ export default function App() {
       playersCards[player].push(card);
     });
 
-    socket.emit("start-game", { roomCode, playersCards, centerCard });
+    const currentPlayer = players[0]; 
+    socket.emit("start-game", { roomCode, playersCards, centerCard, currentPlayer, playerName });
   };
 
   return (
@@ -159,7 +166,7 @@ export default function App() {
           </div>
         )
       ) : (
-        <GameScreen players={players} playerCards={playerCards} centerCard={centerCard} centerStack={centerStack}        /> // Pass playerCards prop to GameScreen
+        <GameScreen players={players} playerCards={playerCards} centerCard={centerCard} centerStack={centerStack} playerName={playerName} roomCode={roomCode} socket={socket}/> // Pass playerCards prop to GameScreen
       )}
     </div>
   );

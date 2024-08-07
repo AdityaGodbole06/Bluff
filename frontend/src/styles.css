@@ -179,29 +179,37 @@
   .player-cards-section {
     background: rgba(0, 123, 255, 0.2);
     border: 1px solid #ccc;
-    padding: 10px;
-    border-radius: 5px;
+    padding: 20px; /* Increased padding for better spacing */
+    border-radius: 10px; /* Curved corners */
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    width: 80%; /* Reduced width */
-    height: 35%; /* Increased height */
+    width: 80%; /* Adjust width as needed */
+    height: 40%; /* Adjust height as needed */
     position: absolute; /* Absolute positioning to place it at the bottom middle */
     bottom: 20px;
     left: 50%;
     transform: translateX(-50%); /* Center horizontally */
+    overflow: auto; /* Allow scrolling if needed */
+    display: flex; /* Ensure flexbox layout */
+    flex-direction: column; /* Stack cards vertically */
+    align-items: center; /* Center cards horizontally */
   }
-  
+
   .player-cards-section h3 {
     font-size: 18px;
     margin-bottom: 10px;
     text-align: center; /* Center the heading text */
   }
-  
+
   .cards-container {
     display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    justify-content: center;
+    flex-wrap: wrap; /* Wrap cards to fit within container */
+    gap: 10px; /* Space between cards */
+    justify-content: center; /* Center cards horizontally */
+    width: 100%; /* Ensure full width of the container */
+    height: 100%; /* Ensure full height of the container */
+    overflow: auto; /* Scroll if cards overflow */
   }
+
   
   .card {
     background: rgba(0, 123, 255, 0.2);
@@ -245,6 +253,39 @@
     font-size: 24px; /* Adjust font size */
     color: hsl(200, 100%, 90%); /* Text color */
   }
+
+  .place-card-button {
+    background: rgba(0, 123, 255, 0.7); /* Background color */
+    border: none;
+    border-radius: 25px; /* Curved corners */
+    color: hsl(200, 100%, 50%);
+    font-size: 18px; /* Adjust font size */
+    padding: 10px 20px; /* Padding for button size */
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    margin: 20px auto; /* Center horizontally and add margin */
+    display: block;
+    margin-top: 50px;
+  }
+  
+  .place-card-button:hover {
+    background: rgba(0, 123, 255, 0.9); /* Darker on hover */
+  }
+
+  .place-card-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px; /* Add space between buttons */
+  }
+  
+  /* .place-card-button {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+  } */
+  
+  
   
   
   
