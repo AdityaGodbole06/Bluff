@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import io from "socket.io-client";
-import GameScreen from "./GameScreen"; // Import the GameScreen component
+import GameTest from "./GameTest"; // Import the GameTest component
 import "./styles.css";
 
 const API_URL = "http://localhost:4000";
@@ -13,18 +13,23 @@ export default function App() {
   const [roomCode, setRoomCode] = useState("");
   const [isLeader, setIsLeader] = useState(false);
   const [gameStarted, setGameStarted] = useState(false); // State to track if the game has started
-  const [playerCards, setPlayerCards] = useState([]);
-  const [centerStack, setCenterStack] = useState([]);
-  const [currentTurnPlayer, setCurrentTurnPlayer] = useState([]);
-  const [centerCard, setCenterCard] = useState(null);
-  const socket = io.connect(API_URL);
+  const [socket, setSocket] = useState(null);
 
-  const deck = [
-    "Ace of Spades", "2 of Spades", "3 of Spades", "4 of Spades", "5 of Spades", "6 of Spades", "7 of Spades", "8 of Spades", "9 of Spades", "10 of Spades", "Jack of Spades", "Queen of Spades", "King of Spades",
-    "Ace of Hearts", "2 of Hearts", "3 of Hearts", "4 of Hearts", "5 of Hearts", "6 of Hearts", "7 of Hearts", "8 of Hearts", "9 of Hearts", "10 of Hearts", "Jack of Hearts", "Queen of Hearts", "King of Hearts",
-    "Ace of Diamonds", "2 of Diamonds", "3 of Diamonds", "4 of Diamonds", "5 of Diamonds", "6 of Diamonds", "7 of Diamonds", "8 of Diamonds", "9 of Diamonds", "10 of Diamonds", "Jack of Diamonds", "Queen of Diamonds", "King of Diamonds",
-    "Ace of Clubs", "2 of Clubs", "3 of Clubs", "4 of Clubs", "5 of Clubs", "6 of Clubs", "7 of Clubs", "8 of Clubs", "9 of Clubs", "10 of Clubs", "Jack of Clubs", "Queen of Clubs", "King of Clubs"
-  ];
+  useEffect(() => {
+    const newSocket = io.connect(API_URL);
+    setSocket(newSocket);
+
+    newSocket.on("game-started", () => {
+      console.log("Game started event received");
+      setGameStarted(true);
+    });
+
+    newSocket.on("player-joined", ({ roomCode, playerName }) => {
+      console.log("HELLO " + playerName + " to " + roomCode);
+    });
+
+    return () => newSocket.disconnect();
+  }, []);
 
   const handleCreateRoom = async (event) => {
     event.preventDefault();
@@ -78,52 +83,9 @@ export default function App() {
       return () => clearInterval(interval);
     }
   }, [roomCode]);
-  
-  useEffect(() => {
-    socket.on("game-started", ({ cards, centerCard, currentTurnPlayer }) => {
-      console.log("Game started event received");
-      setPlayerCards(cards);
-      setCenterCard(centerCard);
-      setCenterStack([centerCard]);
-      setCurrentTurnPlayer(currentTurnPlayer);
-      setGameStarted(true);
-    });
-
-    socket.on("player-joined", ({ roomCode, playerName }) => {
-      console.log("HELLO " + playerName + " to " + roomCode);
-    });
-  }, [socket]);
-
- 
-
-
-  const shuffleDeck = (deck) => {
-    const shuffledDeck = deck.slice();
-    for (let i = shuffledDeck.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffledDeck[i], shuffledDeck[j]] = [shuffledDeck[j], shuffledDeck[i]];
-    }
-    return shuffledDeck;
-  };
 
   const handleStartGame = () => {
-    const shuffledDeck = shuffleDeck(deck);
-    const playersCards = {};
-    const numPlayers = players.length;
-
-    players.forEach((player) => {
-      playersCards[player] = [];
-    });
-
-    const centerCard = shuffledDeck.pop();
-
-    shuffledDeck.forEach((card, index) => {
-      const player = players[index % numPlayers];
-      playersCards[player].push(card);
-    });
-
-    const currentPlayer = players[0]; 
-    socket.emit("start-game", { roomCode, playersCards, centerCard, currentPlayer, playerName });
+    socket.emit("start-game", { roomCode });
   };
 
   return (
@@ -166,9 +128,8 @@ export default function App() {
           </div>
         )
       ) : (
-        <GameScreen players={players} playerCards={playerCards} centerCard={centerCard} centerStack={centerStack} playerName={playerName} roomCode={roomCode} socket={socket}/> // Pass playerCards prop to GameScreen
+        <GameTest socket={socket} roomCode={roomCode} /> // Pass socket and roomCode props to GameTest
       )}
     </div>
   );
-  
 }
