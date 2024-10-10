@@ -17,7 +17,8 @@ export default function App() {
   const [centerStack, setCenterStack] = useState([]);
   const [currentTurnPlayer, setCurrentTurnPlayer] = useState([]);
   const [centerCard, setCenterCard] = useState(null);
-  const socket = io.connect(API_URL);
+  const [socket, setSocket] = useState(null);
+
 
   const deck = [
     "Ace of Spades", "2 of Spades", "3 of Spades", "4 of Spades", "5 of Spades", "6 of Spades", "7 of Spades", "8 of Spades", "9 of Spades", "10 of Spades", "Jack of Spades", "Queen of Spades", "King of Spades",
@@ -80,7 +81,10 @@ export default function App() {
   }, [roomCode]);
   
   useEffect(() => {
-    socket.on("game-started", ({ cards, centerCard, currentTurnPlayer }) => {
+    const newSocket = io.connect(API_URL);
+    setSocket(newSocket);
+
+    newSocket.on("game-started", ({ cards, centerCard, currentTurnPlayer }) => {
       console.log("Game started event received");
       setPlayerCards(cards);
       setCenterCard(centerCard);
@@ -89,10 +93,12 @@ export default function App() {
       setGameStarted(true);
     });
 
-    socket.on("player-joined", ({ roomCode, playerName }) => {
+    newSocket.on("player-joined", ({ roomCode, playerName }) => {
       console.log("HELLO " + playerName + " to " + roomCode);
     });
-  }, [socket]);
+
+    return () => newSocket.disconnect();
+  }, []);
 
  
 

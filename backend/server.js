@@ -97,11 +97,12 @@ io.on("connection", (socket) => {
     Object.keys(playersCards).forEach(playerName => {
       const playerSocketId = getPlayerSocketId(playerName); // Get the socket ID of the player
       if (playerSocketId) {
-        socket.to(playerSocketId).emit("game-started", { 
+        io.to(playerSocketId).emit("game-started", { 
           cards: playersCards[playerName], 
           centerCard,
           turnPlayer: currentTurnPlayer // Notify clients whose turn it is
         });
+        console.log(":hi");
       } else {
         console.error("Socket ID not found for player:", playerName);
       }
@@ -110,7 +111,7 @@ io.on("connection", (socket) => {
     console.log("Initialized game state:", getGameState(roomCode));
   });
 
-  socket.on("place-card", ({ roomCode, selectedCards, newGameState, playerName }) => {
+  socket.on("place-card", ({ roomCode, selectedCards, newGameState, playerName, previousTurn, noCards }) => {
     const clients = io.sockets.adapter.rooms.get(roomCode);
     console.log(`Clients in room ${roomCode}:`, clients ? Array.from(clients) : 'Room does not exist or has no clients');
 
@@ -129,27 +130,42 @@ io.on("connection", (socket) => {
     // Emit the update-game event to the room
 
     console.log(`update-game event emitted to room ${roomCode} with new game state.`);
-
-
-    io.emit("update-game", {newGameState, roomCode});
+    console.log(noCards + playerName);
+    const name = playerName;
+    
+    io.to(roomCode).emit("update-game", {newGameState, roomCode, previousTurn, name, noCards});
     console.log("This is the room code:");
     console.log(roomCode);
   });
 
-  socket.on("increase-center-card", (data) => {
-    const {roomCode} = data;
-    gameState = getGameState(roomCode);
-    const currentCenterCard = gameState.centerStack[gameState.centerStack.length - 1];
-
-    const cardValue = getCardValue(currentCenterCard);
-    const suit = getSuit(currentCenterCard);
-    const nextCardValue = cardValue === 13 ? 1 : cardValue + 1;
-    const newCenterCard = getCardName(nextCardValue) + " of " + suit;
-
-    gameState.centerStack.push(newCenterCard);
-    console.log("hiu" + roomCode);
-    io.to(roomCode).emit("next-card", roomCode);
+  socket.on("bluff-call", ({ roomCode, bluffCaller, bluffCards }) => {
+    console.log(bluffCaller + " Called Bluff");
+    console.log(bluffCards);
+    io.to(roomCode).emit("bluff-called", {bluffCaller, bluffCards});
   });
+
+  socket.on("bluff-card-select", ({ roomCode, newGameState, bluffCall, previousPlayer, oldCenterStack, card }) => {
+    if (!bluffCall) {
+      io.to(roomCode).emit("bluff-card-selected", newGameState, bluffCall, previousPlayer, oldCenterStack, card);
+    } else {
+      console.log(bluffCall);
+      io.to(roomCode).emit("bluff-card-selected", newGameState, bluffCall, previousPlayer, oldCenterStack, card);
+    }
+  });
+
+  socket.on("remove-bluff", ({ roomCode }) => {
+    io.to(roomCode).emit("bluff-removed");
+  });
+
+  socket.on("clear-timer", ({roomCode}) => {
+    console.log("CLEAR TIMER");
+    io.to(roomCode).emit("timer-cleared");
+  })
+
+  socket.on("send-message", (messageData) => {
+    console.log("hello");
+    io.to(messageData.roomCode).emit("message-sent", messageData);
+  })
 
   
 
@@ -178,6 +194,22 @@ io.on("connection", (socket) => {
   //   }
     
   // });
+
+  socket.on("increase-center-card", (data) => {
+    const {roomCode} = data;
+    gameState = getGameState(roomCode);
+    const currentCenterCard = gameState.centerStack[gameState.centerStack.length - 1];
+
+    const cardValue = getCardValue(currentCenterCard);
+    const suit = getSuit(currentCenterCard);
+    const nextCardValue = cardValue === 13 ? 1 : cardValue + 1;
+    const newCenterCard = getCardName(nextCardValue) + " of " + suit;
+
+    gameState.centerStack.push(newCenterCard);
+    console.log("hiu" + roomCode);
+    io.to(roomCode).emit("next-card", roomCode);
+  });
+
 
   socket.on("disconnect", () => {
     for (let playerName in playerSocketIdMap) {

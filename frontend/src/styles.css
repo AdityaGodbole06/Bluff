@@ -258,7 +258,7 @@
     background: rgba(0, 123, 255, 0.7); /* Background color */
     border: none;
     border-radius: 25px; /* Curved corners */
-    color: hsl(200, 100%, 50%);
+    color: hsl(200, 100%, 90%); /* Text color */
     font-size: 18px; /* Adjust font size */
     padding: 10px 20px; /* Padding for button size */
     cursor: pointer;
@@ -278,6 +278,173 @@
     justify-content: center;
     gap: 10px; /* Add space between buttons */
   }
+
+  .bluff-button {
+    background: rgba(0, 123, 255, 0.7); /* Same background color */
+    border: none;
+    border-radius: 30px; /* Larger curved corners */
+    color: hsl(200, 100%, 90%); /* Text color */
+    font-size: 28px; /* Larger font size */
+    padding: 15px 30px; /* Larger padding for bigger size */
+    cursor: pointer;
+    box-shadow: 0 3px 7px rgba(0, 0, 0, 0.3); /* Slightly larger shadow */
+    text-align: center;
+    margin: 20px auto;
+    display: block;
+    width: 300px; /* Set specific width */
+    min-width: 250px; /* Ensure a minimum width */
+}
+
+.bluff-button:hover {
+    background: rgba(0, 123, 255, 0.9); /* Darker on hover */
+}
+
+.bluff-screen {
+  position: absolute;
+  top: 5%;
+  left: 5%;
+  width: 90vw; /* 90% of the viewport width */
+  height: 90vh; /* 90% of the viewport height */
+  background: rgba(63, 63, 63, 0.9); /* Slightly transparent background with 90% opacity */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  padding: 20px;
+}
+
+.bluff-screen-title {
+  font-size: 36px; /* Large font size for the title */
+  color: hsl(200, 100%, 90%);
+  margin-bottom: 10px; /* Decrease the space between the title and the card buttons */
+  text-align: center;
+  margin-top: 20px; /* Add margin to push the title down a little */
+}
+
+.bluff-card-buttons {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 20px; /* Increased space between card buttons */
+  width: 80%; /* Limit width of the buttons container */
+  margin: 20px auto;
+}
+
+.bluff-card-button {
+  background: rgba(0, 123, 255, 0.7);
+  border: none;
+  border-radius: 10px; /* Small curved corners */
+  color: transparent; /* Makes the text invisible */
+  /* font-size: 0; Removes any text size, effectively hiding text */
+  padding: 0; /* Removes padding to ensure the shape is consistent */
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  min-width: 120px; /* Increase width to make the cards larger */
+  width: 150px; /* Larger width for the cards */
+  height: 250px; /* Taller height to create a vertical rectangle */
+}
+
+.bluff-card-button:hover {
+  background: rgba(0, 123, 255, 0.9);
+}
+
+.bluff-card-button.selected {
+  background: rgba(0, 123, 255, 0.7);
+  color: white; /* Change text color to white when selected */
+}
+
+
+.previous-turn-info {
+  font-size: 20px; /* Large font size for the title */
+  color: hsl(200, 83%, 53%);
+  margin-bottom: 10px; /* Decrease the space between the title and the card buttons */
+  text-align: center;
+  margin-top: 20px; /* Add margin to push the title down a little */
+}
+
+.messaging-section {
+  position: absolute;
+  right: 20px;
+  top: 20px;
+  width: 300px; /* Set a fixed width for the chat section */
+}
+
+.message-box {
+  height: 400px; /* Set a fixed height for the message box */
+  overflow-y: scroll; /* Enable vertical scrolling */
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin-bottom: 10px;
+  background: rgba(0, 123, 255, 0.2);
+}
+
+.message-box::-webkit-scrollbar {
+  width: 8px; /* Set the scrollbar width */
+  background-color: #f9f9f9; /* Background color of the scrollbar */
+}
+
+.message-box::-webkit-scrollbar-thumb {
+  background-color: #888; /* Color of the scrollbar thumb */
+  border-radius: 10px;
+}
+
+.message-box::-webkit-scrollbar-track {
+  background-color: #f1f1f1; /* Background color of the scrollbar track */
+}
+
+.message-input {
+  display: flex;
+}
+
+.message-input input {
+  flex: 1;
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 3px 0 0 3px;
+}
+
+.message-input button {
+  padding: 5px 10px;
+  border: 1px solid #ccc;
+  background-color: #888;
+  color: #fff;
+  border-radius: 0 3px 3px 0;
+  cursor: pointer;
+}
+
+.message-input button:hover {
+  background: rgba(63, 63, 63, 0.9);
+}
+
+
+
+.order-button {
+  margin-right: 10px;
+  padding: 25px;
+  background-color: lightgray;
+  border: none;
+  cursor: pointer;
+  position: absolute; /* Absolute positioning to place it in the top left */
+  bottom: 280px;
+  left: 15px;
+}
+
+.order-button.enabled {
+  background-color: green;
+  color: white;
+}
+
+.order-button.disabled {
+  background-color: red;
+  color: white;
+}
+
+
+  
   
   /* .place-card-button {
     padding: 10px 20px;
