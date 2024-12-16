@@ -458,14 +458,7 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
             </div>
           )}
         </div>
-      </div>
-      {/* Add the Order button here */}
-      <button 
-        className={`order-button ${isOrderEnabled ? "enabled" : "disabled"}`}
-        onClick={toggleOrder}
-      >
-        {isOrderEnabled ? "Disable Order" : "Enable Order"}
-      </button>
+      </div>      
       <div className="player-cards-section">
         <h3>Your Cards</h3>
         <DndProvider backend={HTML5Backend}>
@@ -474,7 +467,6 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
             selectedCards={selectedCards} 
             setSelectedCards={setSelectedCards} 
             moveCard={moveCard}
-            isOrderEnabled={isOrderEnabled} 
           />
         </DndProvider>
       </div>
