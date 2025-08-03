@@ -10,8 +10,8 @@ const app = express();
 const server = http.createServer(app);
 
 const allowedOrigins = [
-  'https://bluff-bv7rz6e9b-adis-projects-c6820125.vercel.app/', // Replace with actual frontend URL
-  'http://localhost:5173'             // For development
+  'https://bluff-mu.vercel.app', // Your actual Vercel domain
+  'http://localhost:5173'         // For development
 ];
 
 
