@@ -20,7 +20,6 @@ app.use(express.json());
 
 // Connect to MongoDB
 console.log('Starting application...');
-console.log(`Port: ${PORT}`);
 console.log(`Node ENV: ${process.env.NODE_ENV}`);
 
 connectDB();
@@ -434,6 +433,8 @@ const generateRoomCode = () => {
 };
 
 const PORT = 4000; // Force port 4000 for Railway
+
+console.log(`Port: ${PORT}`);
 
 // Add error handling for server startup
 server.listen(PORT, '0.0.0.0', () => {
