@@ -2,6 +2,9 @@ const express = require("express");
 const http = require("http");
 const socketIo = require("socket.io");
 const cors = require("cors");
+const connectDB = require("./database");
+const RoomService = require("./roomService");
+require("dotenv").config({ path: "./config.env" });
 
 const app = express();
 const server = http.createServer(app);
@@ -14,6 +17,18 @@ const io = socketIo(server, {
 
 app.use(cors());
 app.use(express.json());
+
+// Connect to MongoDB
+connectDB();
+
+// Health check endpoint for Railway
+app.get('/', (req, res) => {
+  res.status(200).json({ 
+    message: 'Bluff Game Backend is running!',
+    status: 'healthy',
+    timestamp: new Date().toISOString()
+  });
+});
 
 const games = {};
 
@@ -32,33 +47,60 @@ const playerSocketIdMap = {}; // This will store the mapping of player names to 
 const turns = {};
 const players = {};
 
-app.post("/create-room", (req, res) => {
-  const { playerName } = req.body;
-  const roomCode = generateRoomCode();
-  rooms[roomCode] = {
-    leader: playerName,
-    players: [playerName]
-  };
-  turns[roomCode] = 0; 
-  res.status(200).json({ roomCode });
-});
-
-app.post("/join-room", (req, res) => {
-  const { playerName, roomCode } = req.body;
-  if (rooms[roomCode]) {
-    rooms[roomCode].players.push(playerName);
-    res.status(200).json({ success: true });
-  } else {
-    res.status(400).json({ success: false, message: "Room not found" });
+app.post("/create-room", async (req, res) => {
+  try {
+    const { playerName } = req.body;
+    const roomCode = generateRoomCode();
+    
+    // Create room in database
+    await RoomService.createRoom(roomCode, playerName);
+    
+    // Keep in-memory for backward compatibility
+    rooms[roomCode] = {
+      leader: playerName,
+      players: [playerName]
+    };
+    turns[roomCode] = 0;
+    
+    res.status(200).json({ roomCode });
+  } catch (error) {
+    console.error("Error creating room:", error);
+    res.status(500).json({ error: "Failed to create room" });
   }
 });
 
-app.get("/room/:roomCode", (req, res) => {
-  const { roomCode } = req.params;
-  if (rooms[roomCode]) {
-    res.status(200).json({ players: rooms[roomCode].players });
-  } else {
-    res.status(400).json({ message: "Room not found" });
+app.post("/join-room", async (req, res) => {
+  try {
+    const { playerName, roomCode } = req.body;
+    
+    // Join room in database
+    await RoomService.joinRoom(roomCode, playerName);
+    
+    // Keep in-memory for backward compatibility
+    if (rooms[roomCode]) {
+      rooms[roomCode].players.push(playerName);
+    }
+    
+    res.status(200).json({ success: true });
+  } catch (error) {
+    console.error("Error joining room:", error);
+    res.status(400).json({ success: false, message: error.message });
+  }
+});
+
+app.get("/room/:roomCode", async (req, res) => {
+  try {
+    const { roomCode } = req.params;
+    const room = await RoomService.getRoom(roomCode);
+    
+    if (room) {
+      res.status(200).json({ players: room.players });
+    } else {
+      res.status(400).json({ message: "Room not found" });
+    }
+  } catch (error) {
+    console.error("Error fetching room:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 
@@ -79,36 +121,45 @@ io.on("connection", (socket) => {
 
   });
 
-  socket.on("start-game", ({ roomCode, playersCards, centerCard, currplayerName }) => {
-    const currentTurnPlayer = rooms[roomCode].players[0]; // Get the player whose turn it is
+  socket.on("start-game", async ({ roomCode, playersCards, centerCard, currplayerName }) => {
+    try {
+      const currentTurnPlayer = rooms[roomCode].players[0]; // Get the player whose turn it is
 
-    // Initialize the game state
-    const gameState = {
-      players: rooms[roomCode].players.map(player => ({
-        name: player,
-        hand: playersCards[player]
-      })),
-      centerStack: [centerCard],
-      currentTurnPlayer
-    };
-    updateGameState(roomCode, gameState);    
+      // Initialize the game state
+      const gameState = {
+        players: rooms[roomCode].players.map(player => ({
+          name: player,
+          hand: playersCards[player]
+        })),
+        centerStack: [centerCard],
+        currentTurnPlayer
+      };
+      
+      // Save to database
+      await RoomService.updateGameState(roomCode, gameState);
+      
+      // Keep in-memory for backward compatibility
+      updateGameState(roomCode, gameState);    
 
-    // Send the relevant cards to each player
-    Object.keys(playersCards).forEach(playerName => {
-      const playerSocketId = getPlayerSocketId(playerName); // Get the socket ID of the player
-      if (playerSocketId) {
-        io.to(playerSocketId).emit("game-started", { 
-          cards: playersCards[playerName], 
-          centerCard,
-          turnPlayer: currentTurnPlayer // Notify clients whose turn it is
-        });
-        console.log(":hi");
-      } else {
-        console.error("Socket ID not found for player:", playerName);
-      }
-    });
-    console.log("Game started for room:", roomCode); // Log game start event
-    console.log("Initialized game state:", getGameState(roomCode));
+      // Send the relevant cards to each player
+      Object.keys(playersCards).forEach(playerName => {
+        const playerSocketId = getPlayerSocketId(playerName); // Get the socket ID of the player
+        if (playerSocketId) {
+          io.to(playerSocketId).emit("game-started", { 
+            cards: playersCards[playerName], 
+            centerCard,
+            turnPlayer: currentTurnPlayer // Notify clients whose turn it is
+          });
+          console.log(":hi");
+        } else {
+          console.error("Socket ID not found for player:", playerName);
+        }
+      });
+      console.log("Game started for room:", roomCode); // Log game start event
+      console.log("Initialized game state:", getGameState(roomCode));
+    } catch (error) {
+      console.error("Error starting game:", error);
+    }
   });
 
   socket.on("place-card", ({ roomCode, selectedCards, newGameState, playerName, previousTurn, noCards }) => {
@@ -121,6 +172,17 @@ io.on("connection", (socket) => {
         return;
     }
 
+    if (noCards) {
+      io.to(roomCode).emit("message-sent", {
+        playerName: "System",
+        message: `${playerName} has no cards left! You have 10 seconds to call their bluff or they will win!`,
+        system: true,
+        timer: true
+      });
+      console.log(`System message sent: ${playerName} has no cards left`);
+    }
+    
+
     const playerSocket = getPlayerSocketId(playerName);
     if (!playerSocket) {
         console.error(`No socket found for player ${playerName}.`);
@@ -128,14 +190,29 @@ io.on("connection", (socket) => {
     }
 
     // Emit the update-game event to the room
+    const gameState = getGameState(roomCode);
 
+    const player = gameState.players.find(p => p.name === playerName);
+    if (player) {
+      player.hand = player.hand.filter(card => !selectedCards.includes(card));
+    }
+
+    gameState.centerStack.push(...selectedCards);
+
+    const players = gameState.players.map(player => ({
+      name: player.name,
+      hand: player.hand
+    }));
+
+    const fixedGameState = { ...newGameState, players };
+    console.log("fixedGameState");
+    console.log(fixedGameState);
+    console.log(fixedGameState.players);
     console.log(`update-game event emitted to room ${roomCode} with new game state.`);
     console.log(noCards + playerName);
     const name = playerName;
-    
-    io.to(roomCode).emit("update-game", {newGameState, roomCode, previousTurn, name, noCards});
-    console.log("This is the room code:");
-    console.log(roomCode);
+    updateGameState(roomCode, fixedGameState);
+    io.to(roomCode).emit("update-game", {newGameState: fixedGameState, roomCode, previousTurn, name, noCards});
   });
 
   socket.on("bluff-call", ({ roomCode, bluffCaller, bluffCards }) => {
@@ -144,12 +221,69 @@ io.on("connection", (socket) => {
     io.to(roomCode).emit("bluff-called", {bluffCaller, bluffCards});
   });
 
-  socket.on("bluff-card-select", ({ roomCode, newGameState, bluffCall, previousPlayer, oldCenterStack, card }) => {
+  socket.on("bluff-card-select", ({ roomCode, newGameState, bluffCall, previousPlayer, oldCenterStack, card, playerName }) => {
+    const gameState = getGameState(roomCode);
+
     if (!bluffCall) {
-      io.to(roomCode).emit("bluff-card-selected", newGameState, bluffCall, previousPlayer, oldCenterStack, card);
+      const updatedPlayers = gameState.players.map(p => {
+        if (p.name === playerName) {
+          return {
+            ...p,
+            hand: [...p.hand, ...oldCenterStack]
+          };
+        }
+        return p;
+      });
+      const fixedGameState = { 
+        ...newGameState,
+        players: updatedPlayers,
+        centerCard: "",
+        centerStack: [],
+        currentTurnPlayer: previousPlayer };
+
+      console.log(fixedGameState.players[0].hand);
+      console.log("fixedGameState.players[1].hand");
+      console.log(fixedGameState.players[1].hand);
+      console.log("fixedGameState.players[2].hand");
+      console.log(fixedGameState.players[2].hand);
+
+      console.log("oldCenterStack");
+      console.log(oldCenterStack);
+      updateGameState(roomCode, fixedGameState);
+
+      io.to(roomCode).emit("bluff-card-selected", {newGameState: fixedGameState, bluffCall, previousPlayer, oldCenterStack, card});
     } else {
-      console.log(bluffCall);
-      io.to(roomCode).emit("bluff-card-selected", newGameState, bluffCall, previousPlayer, oldCenterStack, card);
+      const updatedPlayers = gameState.players.map(p => {
+        if (p.name === previousPlayer) {
+          return {
+            ...p,
+            hand: [...p.hand, ...oldCenterStack]
+          };
+        }
+        return p;
+      });
+      const fixedGameState = { 
+        ...newGameState,
+        players: updatedPlayers,
+        centerCard: "",
+        centerStack: [],
+        currentTurnPlayer: playerName };
+  
+      console.log(fixedGameState);
+      console.log("fixedGameState.players");
+      console.log(fixedGameState.players[0].hand);
+      console.log("fixedGameState.players[1].hand");
+      console.log(fixedGameState.players[1].hand);
+      console.log("fixedGameState.players[2].hand");
+      console.log(fixedGameState.players[2].hand);
+
+      console.log("oldCenterStack");
+      console.log(oldCenterStack);
+      console.log("Previous Center Stack from Game State");
+      console.log(gameState.centerStack);
+      updateGameState(roomCode, fixedGameState);
+
+      io.to(roomCode).emit("bluff-card-selected", {newGameState: fixedGameState, bluffCall, previousPlayer, oldCenterStack, card});
     }
   });
 
@@ -166,6 +300,54 @@ io.on("connection", (socket) => {
     console.log("hello");
     io.to(messageData.roomCode).emit("message-sent", messageData);
   })
+
+  socket.on("return-to-room", ({ roomCode }) => {
+    io.to(roomCode).emit("game-ended", { roomCode });
+  })
+
+  socket.on("leave-room", async ({ roomCode, playerName }) => {
+    try {
+      console.log(`Player ${playerName} leaving room ${roomCode}`);
+      
+      // Remove player from database
+      const updatedRoom = await RoomService.removePlayer(roomCode, playerName);
+      
+      // Remove player from socket mapping
+      delete playerSocketIdMap[playerName];
+      delete players[playerName];
+      
+      // Update in-memory state
+      if (rooms[roomCode] && rooms[roomCode].players) {
+        rooms[roomCode].players = rooms[roomCode].players.filter(player => player !== playerName);
+        
+        // If the leaving player was the leader, assign a new leader
+        if (rooms[roomCode].leader === playerName && rooms[roomCode].players.length > 0) {
+          rooms[roomCode].leader = rooms[roomCode].players[0];
+        }
+        
+        // If no players left in room, delete the room
+        if (rooms[roomCode].players.length === 0) {
+          delete rooms[roomCode];
+          delete turns[roomCode];
+          console.log(`Room ${roomCode} deleted - no players remaining`);
+        } else {
+          // Notify remaining players that someone left
+          io.to(roomCode).emit("player-left", { 
+            roomCode, 
+            playerName, 
+            remainingPlayers: rooms[roomCode].players,
+            newLeader: rooms[roomCode].leader 
+          });
+          console.log(`Player ${playerName} left room ${roomCode}. Remaining players:`, rooms[roomCode].players);
+        }
+      }
+      
+      // Remove socket from room
+      socket.leave(roomCode);
+    } catch (error) {
+      console.error("Error leaving room:", error);
+    }
+  });
 
   
 
@@ -234,8 +416,10 @@ const generateRoomCode = () => {
   return code;
 };
 
-server.listen(4000, () => {
-  console.log("Server is running on http://localhost:4000");
+const PORT = process.env.PORT || 4000;
+
+server.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
 });
 
 

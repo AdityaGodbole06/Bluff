@@ -20,10 +20,15 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
   const [timer, setTimer] = useState(null);
   const [timeLeft, setTimeLeft] = useState(10);
   const [endBluff, setEndBluff] = useState(false);
+  const [isBluffCorrect, setIsBluffCorrect] = useState(null);
 
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
+  const [messageSent, setMessageSent] = useState(false);
+
   const [isOrderEnabled, setIsOrderEnabled] = useState(false); 
+  const [showVictoryScreen, setShowVictoryScreen] = useState(false);
+  const [victoryPlayer, setVictoryPlayer] = useState(null);
 
 
   const messageBoxRef = useRef(null);
@@ -43,6 +48,9 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
   useEffect(() => {    
     socket.on("update-game", ({ newGameState, roomCode, previousTurn, name, noCards }) => {
       console.log("Received update-game event");
+      console.log(newGameState);
+      console.log(newGameState.players);
+      const thisPlayer = newGameState.players.find(p => p.name === playerName);
       if (noCards) {
         console.log("SET NOCARDSLEFT TO PLAYER NAME");
         setNoCardsLeft(name);
@@ -51,11 +59,16 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
         console.log("SET NOCARDSLEFT TO NULL");
         setNoCardsLeft(null);
       }
-      console.log(newGameState);
       setGameState(newGameState);
       setCurrentCenterCard(newGameState.centerCard);
       console.log(previousTurn.playerName);
       setPreviousTurn(previousTurn);
+      console.log(newGameState);
+      console.log(thisPlayer);
+      if (thisPlayer) {
+        console.log("Hand from server:", thisPlayer.hand);
+        setPlayerHand(thisPlayer.hand);
+      }
     });
 
     socket.on("bluff-called", ({ bluffCaller, bluffCards }) => {
@@ -86,24 +99,41 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
       setTimer(null);
     });
 
-    socket.on("bluff-card-selected", (newGameState, bluffCall, previousPlayer, oldCenterStack, card) => {
+    socket.on("bluff-card-selected", ({newGameState, bluffCall, previousPlayer, oldCenterStack, card}) => {
+      console.log(oldCenterStack);
       setSelectedBluffCard(card);
+      const thisPlayer = newGameState.players.find(p => p.name === playerName);
+      if (thisPlayer) {
+        console.log("Hand from server:", thisPlayer.hand);
+        setPlayerHand(thisPlayer.hand);
+      }
+
+      console.log("THIS IS THE NEW GAME STATE AFTER BLUFF CALL")
       console.log(newGameState);
+      setIsBluffCorrect(bluffCall);
       if (!bluffCall) {
         setWinner(previousPlayer);
         setGameState(newGameState);
         setCurrentCenterCard(newGameState.centerCard);
       } else {
+        console.log("THIS IS THE NEW GAME STATE AFTER BLUFF CALL")
+        console.log(newGameState);
+        console.log(newGameState.players);
+        console.log("newGameState.players[0].hand");
+        console.log(newGameState.players[0].hand);
+        console.log("newGameState.players[1].hand");
+        console.log(newGameState.players[1].hand);
+
+        console.log("oldCenterStack");
+        console.log(oldCenterStack);
+        console.log("Previous Center Stack from Game State");
+        console.log(gameState.centerStack);
+
+
         setWinner(bluffCaller);
         setNoCardsLeft(null);
         setEndBluff(false);
-        if (previousPlayer === playerName) {
-          const combinedHand = [...playerHand, ...oldCenterStack];
-          // Use a Set to remove any duplicates
-          const uniqueHand = Array.from(new Set(combinedHand));
-          // Update the player's hand with the unique cards
-          setPlayerHand(uniqueHand);
-        }
+        
         setGameState(newGameState);
         setCurrentCenterCard(newGameState.centerCard);
       }
@@ -117,32 +147,30 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
     
   }, [socket]);
 
-  useEffect(() => {
-    let interval;
-    console.log("USEEFFECT FOR NOCARDSLEFT" + noCardsLeft);
-    if (noCardsLeft !== null && !endBluff) {
-      console.log("START TIMER");
-      setTimeLeft(10);
-      interval = setInterval(() => {
-        setTimeLeft((prev) => {
-          // if (prev === 1) {
-          //   clearInterval(interval);
-          //   setTimer(null);
-          //   setShowBluffScreen(false);
-          //   // socket.emit("game-over", { winner: noCardsLeft, roomCode });
-          //   // alert(`${noCardsLeft} wins the game!`);
-          //   console.log(noCardsLeft + " WINS THE GAME!!!");
-          // }
-          return prev - 1;
-        });
-      }, 1000);
-      setTimer(interval);
-    } else {
-      clearInterval(timer);
-      setTimer(null);
-    }
-    return () => clearInterval(interval);
-  }, [noCardsLeft, endBluff]);
+
+// Effect for handling the timer
+useEffect(() => {
+  let interval;
+
+  if (noCardsLeft !== null && !endBluff) {
+    setTimeLeft(10);
+    interval = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          setTimer(null);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    setTimer(interval);
+  }
+
+  return () => clearInterval(interval);
+}, [noCardsLeft, endBluff]);
+
 
   useEffect(() => {
     const handleMessageSent = (messageData) => {
@@ -162,8 +190,26 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
   useEffect(() => {
     if (timeLeft === 0 && noCardsLeft && !endBluff) {
       setShowBluffScreen(false);
-      // socket.emit("game-over", { winner: noCardsLeft, roomCode });
+      setShowVictoryScreen(true);
+      setVictoryPlayer(noCardsLeft);
       console.log(noCardsLeft + " wins the game!!!");
+      
+      // Send victory message
+      socket.emit("send-message", {
+        roomCode,
+        playerName: "System",
+        message: `${noCardsLeft} wins the game! No one called the bluff!`,
+        system: true,
+        timer: true
+      });
+      
+      // Hide victory screen after 5 seconds and return to room
+      setTimeout(() => {
+        setShowVictoryScreen(false);
+        setVictoryPlayer(null);
+        // Emit event to return to room screen
+        socket.emit("return-to-room", { roomCode });
+      }, 5000);
     }
   }, [timeLeft, noCardsLeft, roomCode, socket]);
   
@@ -178,14 +224,20 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
       }
   
   
-      const placedCards = previousTurn.cardsPlaced; // Capture the placed cards
+      const placedCards = previousTurn.cardsPlaced; 
       setBluffCards(placedCards); // Update the state
       setShowBluffScreen(true); // Show the bluff screen
       setBluffCaller(playerName);
     
       console.log(placedCards); // This will log the correct cards placed in the previous turn
       socket.emit("bluff-call", { roomCode, bluffCaller: playerName, bluffCards: placedCards }); // Emit the correct cards
-      
+      socket.emit("send-message", {
+        roomCode,
+        playerName: "System",
+        message: `${playerName} called ${previousTurn.playerName} on a bluff!`,
+        system: true  // Flag it as a system message
+      });
+  
       console.log(`${playerName} called a bluff!`);
     }
   };
@@ -194,8 +246,11 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
   const handlePlaceCard = (card) => {
     console.log(selectedCards.length);
     if (selectedCards.length > 0) {
+      console.log("playerHand");
+      console.log(playerHand);
       const newPlayerHand = playerHand.filter(handCard => !selectedCards.includes(handCard));
       setPlayerHand(newPlayerHand);
+      console.log(newPlayerHand);
       let noCards = false;
       if (newPlayerHand.length === 0) {
         noCards = true;
@@ -242,9 +297,29 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
     socket.emit("increase-center-card", {roomCode: roomCode});
   };
 
+  function getSuitSymbol(card) {
+    if (!card) return "";
+    if (card.includes("Hearts")) return "♥";
+    if (card.includes("Diamonds")) return "♦";
+    if (card.includes("Spades")) return "♠";
+    if (card.includes("Clubs")) return "♣";
+    return "";
+  }
+  
+  function getSuitColor(card) {
+    if (!card) return "";
+    if (card.includes("Hearts") || card.includes("Diamonds")) return "red-suit";
+    return "black-suit";
+  }
+  
+
+  const suitSymbol = getSuitSymbol(currentCenterCard);
+  
+
   const handleCardClick = (card) => {
     console.log(`${playerName} selected ${getCardValue(card)} as the bluff!`);
     console.log(previousTurn.numberSelected);
+    console.log(playerHand);
     setSelectedBluffCard(card); // Set the selected card
     let bluffCall = true;
     const oldCenterStack = gameState.centerStack;
@@ -256,30 +331,73 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
         console.log("You guessed CORRECT");
         const updatedPlayerHand = [...playerHand, ...gameState.centerStack];
         setPlayerHand(updatedPlayerHand);
+        console.log("PLEASE DONT SHOW")
+        console.log(playerHand);
 
+        socket.emit("send-message", {
+          roomCode,
+          playerName: "System",
+          message: `${playerName} guessed incorrectly!`,
+          system: true  // Flag it as a system message
+        });
+
+        const updatedPlayers = gameState.players.map(p => {
+          if (p.name === playerName) {
+            return {
+              ...p,
+              hand: [...p.hand, ...gameState.centerStack]
+            };
+          }
+          return p;
+        });
+        
+        
+  
         bluffCall = false;
+        setIsBluffCorrect(false);
         // Reset the center stack
         const newGameState = {
-            ...gameState,
-            centerCard: "",
-            centerStack: [],
-            currentTurnPlayer: previousTurn.playerName
+          ...gameState,
+          players: updatedPlayers,
+          centerCard: "",
+          centerStack: [],
+          currentTurnPlayer: previousTurn.playerName
         };
         setCurrentCenterCard("");
         setGameState(newGameState);
-        socket.emit("bluff-card-select", { roomCode, newGameState, bluffCall, previousPlayer, oldCenterStack, card });
+        socket.emit("bluff-card-select", { roomCode, newGameState, bluffCall, previousPlayer, oldCenterStack, card, playerName });
       }
     } else {
+      const updatedPlayers = gameState.players.map(p => {
+        if (p.name === previousPlayer) {
+          return {
+            ...p,
+            hand: [...p.hand, ...gameState.centerStack]
+          };
+        }
+        return p;
+      });
       
       const newGameState = {
         ...gameState,
+        players: updatedPlayers,
         centerCard: "",
         centerStack: [],
         currentTurnPlayer: playerName
       }
+      console.log(oldCenterStack);
+      console.log(playerHand);
       setEndBluff(true);
+      setIsBluffCorrect(true);
       setNoCardsLeft(null);
-      socket.emit("bluff-card-select", { roomCode, newGameState, bluffCall, previousPlayer, oldCenterStack, card });
+      socket.emit("bluff-card-select", { roomCode, newGameState, bluffCall, previousPlayer, oldCenterStack, card, playerName });
+      socket.emit("send-message", {
+        roomCode,
+        playerName: "System",
+        message: `${playerName} guessed correctly!`,
+        system: true  // Flag it as a system message
+      });
+
       console.log("You guessed INCORRECT");
     };
 
@@ -287,7 +405,7 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
       setShowBluffScreen(false);
       setWinner(null);
       socket.emit("remove-bluff", { roomCode });
-    }, 3000);
+    }, 5000);
   
 
     // Hide bluff screen after selection
@@ -360,175 +478,430 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
         playerName,
         message: newMessage,
       };
-      console.log(messageData);
       socket.emit("send-message", messageData);
       // setMessages((prevMessages) => [...prevMessages, messageData]);
       setNewMessage("");
     }
   };
 
+  function getCardRank(card) {
+    if (!card) return "";
+    const rank = card.split(" ")[0];
+    if (["Jack", "Queen", "King", "Ace"].includes(rank)) {
+      return rank[0]; // J, Q, K, A
+    }
+    return rank;
+  }
+  
   
 
   return (
     <div className="game-screen">
-      <div className="player-list">
-        <h3>Players</h3>
-        <ul>
-          {players.map((player, index) => (
-            <li key={index} style={{ color: player === gameState.currentTurnPlayer ? "red" : "black" }}>
-              {player}
-            </li>
-          ))}
-        </ul>
-      </div>
-      <div className="center-card-container">
-        <div className="stack-info">Stack: {gameState.centerStack.length}</div>
-        <div className="center-card">
-          {currentCenterCard ? (
-            previousTurn.playerName ? (
-              `${numberToWords(previousTurn.cardsPlaced.length)} ${currentCenterCard}'s`
-            ) : (
-              currentCenterCard
-            )
-          ) : (
-            ""
-          )}
+      <div className="top-section">
+
+
+        <div className="player-list">
+          <h3>Players</h3>
+          <ul>
+            {players.map((player, index) => (
+              <li key={index} className={player === gameState.currentTurnPlayer ? "active-player" : ""}>
+                {player}
+              </li>
+            ))}
+          </ul>
         </div>
-        <div className="action-buttons">
-          {playerName === gameState.currentTurnPlayer ? (
-            <div className="place-card-buttons">
-              {gameState.centerStack.length === 0 ? (
-                // Render 13 buttons when center stack is empty
+        <div className="center-card-wrapper">
+
+          <div className="center-card-container">
+            <div className="stack-info">Stack: {gameState.centerStack.length}</div>
+            <div className="center-card-stack">
+              {gameState.centerStack.length >= 3 && (
+                <div className="stacked-card back-layer-2" />
+              )}
+              {gameState.centerStack.length >= 2 && (
+                <div className="stacked-card back-layer-1" />
+              )}
+
+              <div className="center-card">
+                {currentCenterCard && (
+                  <>
+                    <div className={`corner top-left ${getSuitColor(currentCenterCard)}`}>
+                      <div>{getCardRank(currentCenterCard)}</div>
+                      <div>{getSuitSymbol(currentCenterCard)}</div>
+                    </div>
+                    <div className={`card-value ${getSuitColor(currentCenterCard)}`}>
+                      {previousTurn.playerName
+                        ? `${numberToWords(previousTurn.cardsPlaced.length)} ${currentCenterCard}${previousTurn.cardsPlaced.length > 1 ? "s" : ""}`
+                        : currentCenterCard}
+                    </div>
+                    <div className={`corner bottom-right ${getSuitColor(currentCenterCard)}`}>
+                      <div>{getCardRank(currentCenterCard)}</div>
+                      <div>{getSuitSymbol(currentCenterCard)}</div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+
+
+
+            <div className="action-buttons">
+              {noCardsLeft && !endBluff ? (
+                // Show only timer and bluff button during timer
                 <>
-                  {["Ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Jack", "Queen", "King"].map((cardName) => (
-                    <button 
-                      key={cardName} 
-                      className="place-card-button" 
-                      onClick={() => handlePlaceCard(cardName + " of " + suit)}
-                      disabled={!!noCardsLeft}
-                    >
-                      {cardName}
-                    </button>
-                  ))}
+                  <div className="timer-message">
+                    <div className="timer-content">
+                      <span className="timer-number">{timeLeft}</span>
+                      <span className="timer-text">
+                        {playerName === noCardsLeft 
+                          ? "Will win!"
+                          : "Call bluff!"
+                        }
+                      </span>
+                    </div>
+                  </div>
+                  {previousTurn.playerName &&
+                  previousTurn.cardsPlaced.length > 0 &&
+                  playerName !== previousTurn.playerName &&
+                  playerName !== noCardsLeft &&
+                  gameState.centerStack.length !== 0 && (
+                    <div className="bluff-button-container">
+                      <button
+                        className="bluff-button"
+                        onClick={handleBluff}
+                      >
+                        Bluff
+                      </button>
+                    </div>
+                  )}
                 </>
               ) : (
-                // Render the original three buttons when center stack is not empty
+                // Show normal game buttons when timer is not active
                 <>
-                  <button 
-                    className="place-card-button" 
-                    onClick={() => handlePlaceCard(getCardName(previousCardValue) + " of " + suit)}
-                    disabled={!!noCardsLeft} // Disable if noCardsLeft is set
-                  >
-                    {getCardName(previousCardValue)}
-                  </button>
-                  <button 
-                    className="place-card-button" 
-                    onClick={() => handlePlaceCard(currentCenterCard)}
-                    disabled={!!noCardsLeft} // Disable if noCardsLeft is set
-                  >
-                    {getCardName(cardValue)}
-                  </button>
-                  <button 
-                    className="place-card-button" 
-                    onClick={() => handlePlaceCard(getCardName(nextCardValue) + " of " + suit)}
-                    disabled={!!noCardsLeft} // Disable if noCardsLeft is set
-                  >
-                    {getCardName(nextCardValue)}
-                  </button>
+                  {playerName === gameState.currentTurnPlayer ? (
+                    <div className={`place-card-buttons ${gameState.centerStack.length !== 0 ? 'three-buttons' : 'all'}`}>
+                      {gameState.centerStack.length === 0 ? (
+                        // Render 13 buttons when center stack is empty
+                        <>
+                          {["Ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Jack", "Queen", "King"].map((cardName) => (
+                            <button 
+                              key={cardName} 
+                              className="place-card-button" 
+                              onClick={() => handlePlaceCard(cardName + " of " + suit)}
+                            >
+                              {cardName}
+                            </button>
+                          ))}
+                        </>
+                      ) : (
+                        // Render the original three buttons when center stack is not empty
+                        <>
+                          <button 
+                            className="place-card-button" 
+                            onClick={() => handlePlaceCard(getCardName(previousCardValue) + " of " + suit)}
+                          >
+                            {getCardName(previousCardValue)}
+                          </button>
+                          <button 
+                            className="place-card-button" 
+                            onClick={() => handlePlaceCard(currentCenterCard)}
+                          >
+                            {getCardName(cardValue)}
+                          </button>
+                          <button 
+                            className="place-card-button" 
+                            onClick={() => handlePlaceCard(getCardName(nextCardValue) + " of " + suit)}
+                          >
+                            {getCardName(nextCardValue)}
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  ) : (
+                    <>
+                      <p className="waiting-message">Waiting for {gameState.currentTurnPlayer} to place a card...</p>
+                    </>
+                  )}
+                  {previousTurn.playerName &&
+                  previousTurn.cardsPlaced.length > 0 &&
+                  playerName !== previousTurn.playerName &&
+                  gameState.centerStack.length !== 0 && (
+                    <div className="bluff-button-container">
+                      <button
+                        className="bluff-button"
+                        onClick={handleBluff}
+                      >
+                        Bluff
+                      </button>
+                    </div>
+                  )}
                 </>
               )}
             </div>
-          ) : (
-            <>
-              <p>Waiting for {gameState.currentTurnPlayer} to place a card...</p>
-            </>
-          )}
-           {previousTurn.playerName &&
-          previousTurn.cardsPlaced.length > 0 &&
-          playerName !== previousTurn.playerName &&
-          gameState.centerStack.length !== 0 && (
-            <div className="bluff-button-container">
-              <button
-                className="bluff-button"
-                onClick={handleBluff}
-                disabled={!!noCardsLeft}
-              >
-                Bluff
-              </button>
-            </div>
-          )}
+          </div>      
         </div>
-      </div>      
-      <div className="player-cards-section">
-        <h3>Your Cards</h3>
-        <DndProvider backend={HTML5Backend}>
-          <PlayerCards 
-            cards={playerHand} 
-            selectedCards={selectedCards} 
-            setSelectedCards={setSelectedCards} 
-            moveCard={moveCard}
-          />
-        </DndProvider>
-      </div>
-      <div className="messaging-section">
-        <div className="message-box" ref={messageBoxRef} >
-          {messages.map((message, index) => (
-            <div key={index}>
-              <strong>{message.playerName}:</strong> {message.message}
-            </div>
-          ))}
-        </div>
-        <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }}>
-          <div className="message-input">
-            <input
-              type="text"
-              placeholder="Type a message..."
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-            />
-            <button type="submit">Send</button>
+
+        <div className="messaging-section">
+          <div className="message-box" ref={messageBoxRef} >
+          {messages.map((message, index) => {
+            return (
+              <div key={index} className={message.timer ? "timer-system-message" : message.system ? "system-message" : ""}>
+                {message.timer ? (
+                  <span>{message.message}</span>
+                ) : message.system ? (
+                  <em>{message.message}</em>
+                ) : (
+                  <>
+                    <strong>{message.playerName}:</strong> {message.message}
+                  </>
+                )}
+              </div>
+            );
+          })}
+
           </div>
-        </form>
+          <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }}>
+            <div className="message-input">
+              <input
+                type="text"
+                placeholder="Type a message..."
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+              />
+              <button type="submit">Send</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+
+
+      <div className="bottom-row">
+        <div className="player-cards-section">
+          <h3>Your Cards</h3>
+          <DndProvider backend={HTML5Backend}>
+            <PlayerCards 
+              cards={playerHand} 
+              selectedCards={selectedCards} 
+              setSelectedCards={setSelectedCards} 
+              moveCard={moveCard}
+            />
+          </DndProvider>
+        </div>
       </div>
       {showBluffScreen && (
         <div className="bluff-screen">
           <div className="previous-turn-info">
-            {previousTurn.playerName} CLAIMS to have placed {numberToWords(previousTurn.cardsPlaced.length)} {previousTurn.numberSelected}'s
+            {selectedBluffCard ? (
+              // Message after selection
+              playerName === bluffCaller ? (
+                isBluffCorrect ? (
+                  <>Great! You found the bluff. 🎉</>
+                ) : (
+                  <>Oops! You didn't find the bluff this time. 😅</>
+                )
+              ) : playerName === previousTurn.playerName ? (
+                isBluffCorrect ? (
+                  <>Oh no! Your bluff was caught! 😓</>
+                ) : (
+                  <>Nice! They couldn't find your bluff. 😎</>
+                )
+              ) : (
+                <>
+                  {isBluffCorrect
+                    ? `${bluffCaller} successfully found ${previousTurn.playerName}'s bluff!`
+                    : `${bluffCaller} failed to find ${previousTurn.playerName}'s bluff.`}
+                </>
+              )
+            ) : (
+              // Message before selection
+              playerName === previousTurn.playerName ? (
+                <>You got called! Waiting to see which card exposes your bluff...</>
+              ) : playerName === bluffCaller ? (
+                <>
+                  You called the bluff! {previousTurn.playerName} claimed they placed{" "}
+                  {numberToWords(previousTurn.cardsPlaced.length)} {previousTurn.numberSelected}
+                  {previousTurn.cardsPlaced.length > 1 ? "s" : ""}. Can you find the bluff...
+                </>
+              ) : (
+                <>
+                  Will {previousTurn.playerName} get caught lying about placing{" "}
+                  {numberToWords(previousTurn.cardsPlaced.length)} {previousTurn.numberSelected}
+                  {previousTurn.cardsPlaced.length > 1 ? "s" : ""}?
+                </>
+              )
+            )}
           </div>
+
+
+
           {playerName === bluffCaller ? (
+            // Bluff Caller
             <>
-              <div className="bluff-screen-title">Select a Card</div>
-              <div className="bluff-card-buttons">
-                {bluffCards.map((card, index) => (
-                  <button 
-                    key={index} 
-                    className={`bluff-card-button ${selectedBluffCard === card ? "selected" : ""}`}
-                    onClick={() => handleCardClick(card)}
-                    disabled={!!selectedBluffCard}
-                  >
-                    {card}
-                  </button>
-                ))}
+              <div className="bluff-screen-title">
+                {selectedBluffCard ? (
+                  isBluffCorrect
+                    ? "You won! 🎉 "
+                    : "You lost! 😅 "
+                ) : (
+                  "Select a Card"
+                )}
               </div>
+              <div className="bluff-card-buttons">
+                {bluffCards.map((card, index) => {
+                  const suitSymbol = getSuitSymbol(card);
+                  const rank = getCardRank(card);
+                  const suitColor = getSuitColor(card);
+
+                  const isRevealed = selectedBluffCard === card;
+
+                  return (
+                    <button
+                      key={index}
+                      className={`bluff-card-button ${
+                        isRevealed
+                          ? isBluffCorrect
+                            ? "bluff-correct"
+                            : "bluff-wrong"
+                          : ""
+                      }`}
+                      onClick={() => handleCardClick(card)}
+                      disabled={!!selectedBluffCard}
+                    >
+                      {isRevealed && (
+                        <>
+                          <div className={`corner top-left ${suitColor}`}>
+                            <div>{rank}</div>
+                            <div>{suitSymbol}</div>
+                          </div>
+                          <div className={`card-value ${suitColor}`}>{card}</div>
+                          <div className={`corner bottom-right ${suitColor}`}>
+                            <div>{rank}</div>
+                            <div>{suitSymbol}</div>
+                          </div>
+                        </>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+            </>
+          ) : playerName === previousTurn.playerName ? (
+            // Player who got called for bluff
+            <>
+              <div className="bluff-screen-title">
+                {selectedBluffCard ? (
+                  isBluffCorrect
+                    ? "You lost! 😅 "
+                    : "You won! 🎉 "
+                ) : (
+                  `${bluffCaller} is selecting a card...`
+                )}
+              </div>
+              <div className="bluff-card-buttons">
+                {bluffCards.map((card, index) => {
+                  const suitSymbol = getSuitSymbol(card);
+                  const rank = getCardRank(card);
+                  const suitColor = getSuitColor(card);
+                  const isRevealed = selectedBluffCard === card;
+
+                  return (
+                    <button
+                      key={index}
+                      className={`bluff-card-button ${
+                        isRevealed
+                          ? isBluffCorrect
+                            ? "bluff-wrong"
+                            : "bluff-correct"
+                          : ""
+                      }`}
+                      disabled
+                    >
+                      {isRevealed && (
+                        <>
+                          <div className={`corner top-left ${suitColor}`}>
+                            <div>{rank}</div>
+                            <div>{suitSymbol}</div>
+                          </div>
+                          <div className={`card-value ${suitColor}`}>
+                            {card}
+                          </div>
+                          <div className={`corner bottom-right ${suitColor}`}>
+                            <div>{rank}</div>
+                            <div>{suitSymbol}</div>
+                          </div>
+                        </>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
             </>
           ) : (
+            // Other players
             <>
-              {winner ? (
-                <div className="bluff-screen-title">{winner} won!!!</div>
-              ) : <div className="bluff-screen-title">{bluffCaller} is selecting a card...</div>}
-              <div className="bluff-card-buttons">
-                {bluffCards.map((card, index) => (
-                  <button 
-                    key={index} 
-                    className={`bluff-card-button ${selectedBluffCard === card ? "selected" : ""}`} 
-                    disabled
-                  >
-                    {card}
-                  </button>
-                ))}
+              <div className="bluff-screen-title">
+                {selectedBluffCard ? (
+                  isBluffCorrect
+                    ? `${bluffCaller} found the bluff! 🎉`
+                    : `${bluffCaller} missed the bluff. 😅`
+                ) : (
+                  `${bluffCaller} is selecting a card...`
+                )}
               </div>
+              <div className="bluff-card-buttons">
+                {bluffCards.map((card, index) => {
+                  const suitSymbol = getSuitSymbol(card);
+                  const rank = getCardRank(card);
+                  const suitColor = getSuitColor(card);
+                  const isRevealed = selectedBluffCard === card;
+
+                  return (
+                    <button
+                      key={index}
+                      className={`bluff-card-button ${isRevealed ? "selected" : ""}`}
+                      disabled
+                    >
+                      {isRevealed && (
+                        <>
+                          <div className={`corner top-left ${suitColor}`}>
+                            <div>{rank}</div>
+                            <div>{suitSymbol}</div>
+                          </div>
+                          <div className={`card-value ${suitColor}`}>
+                            {card}
+                          </div>
+                          <div className={`corner bottom-right ${suitColor}`}>
+                            <div>{rank}</div>
+                            <div>{suitSymbol}</div>
+                          </div>
+                        </>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
             </>
           )}
+
+        </div>
+      )}
+      {showVictoryScreen && (
+        <div className="victory-screen">
+          <div className="victory-content">
+            <h1 className="victory-title">
+              {playerName === victoryPlayer ? "🎉 Victory! 🎉" : "😔 Defeat! 😔"}
+            </h1>
+            <p className="victory-message">
+              {victoryPlayer} wins the game!
+            </p>
+            <div className="victory-timer">
+              Returning to room in 5 seconds...
+            </div>
+          </div>
         </div>
       )}
     </div>

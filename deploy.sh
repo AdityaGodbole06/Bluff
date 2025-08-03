@@ -1,0 +1,47 @@
+#!/bin/bash
+
+echo "🚀 Bluff Game Free Deployment Script"
+echo "====================================="
+
+echo ""
+echo "📋 Prerequisites:"
+echo "1. GitHub repository with your code"
+echo "2. MongoDB Atlas account"
+echo "3. Railway account"
+echo "4. Vercel account"
+echo ""
+
+echo "🗄️ Step 1: MongoDB Atlas Setup"
+echo "   - Go to https://www.mongodb.com/atlas"
+echo "   - Create M0 Free cluster"
+echo "   - Create database user"
+echo "   - Set network access to 'Allow from anywhere'"
+echo "   - Copy your connection string"
+echo ""
+
+echo "🚂 Step 2: Deploy Backend to Railway"
+echo "   - Go to https://railway.app/"
+echo "   - Create new project from GitHub"
+echo "   - Set root directory to 'backend'"
+echo "   - Add environment variables:"
+echo "     MONGODB_URI=your_atlas_connection_string"
+echo "     NODE_ENV=production"
+echo ""
+
+echo "🌐 Step 3: Deploy Frontend to Vercel"
+echo "   - Go to https://vercel.com/"
+echo "   - Import GitHub repository"
+echo "   - Set root directory to 'frontend'"
+echo "   - Add environment variable:"
+echo "     VITE_API_URL=your_railway_backend_url"
+echo ""
+
+echo "✅ Step 4: Test Your Deployment"
+echo "   - Test creating a room"
+echo "   - Test joining a room"
+echo "   - Test the game functionality"
+echo ""
+
+echo "💰 Total Cost: $0/month"
+echo ""
+echo "🎉 Your bluff game will be live and free!" 

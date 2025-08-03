@@ -1,5 +1,6 @@
 import React from "react";
 import { useDrag, useDrop } from "react-dnd";
+import "./styles.css";
 
 function Card({ card, index, moveCard, isSelected, onClick }) {
   const [{ isDragging }, drag] = useDrag({
@@ -20,30 +21,52 @@ function Card({ card, index, moveCard, isSelected, onClick }) {
     },
   });
 
+  const [rank, suit] = card.split(" of ");
 
-    return (
-        <div
-        ref={(node) => drag(drop(node))}
-        onClick={onClick}
-        style={{
-            opacity: isDragging ? 0.5 : 1,
-            border: isSelected ? "2px solid blue" : "1px solid gray",
-            padding: "10px", /* Adjust padding */
-            margin: "5px", /* Adjust margin */
-            backgroundColor: "#007bff33", /* Background color */
-            borderRadius: "8px", /* Curved corners */
-            cursor: "move",
-            boxShadow: "0 2px 5px rgba(0, 0, 0, 0.1)", /* Shadow */
-            textAlign: "center", /* Center text */
-            fontSize: "16px", /* Font size */
-            maxWidth: "100px", /* Limit width to fit in container */
-            maxHeight: "150px", /* Limit height to fit in container */
-            overflow: "hidden", /* Hide overflow content */
-        }}
+  const suitSymbols = {
+    Hearts: "♥",
+    Diamonds: "♦",
+    Spades: "♠",
+    Clubs: "♣",
+  };
+
+  const suitSymbol = suitSymbols[suit] || "?";
+  const isRed = suit === "Hearts" || suit === "Diamonds";
+  const suitColorClass = isRed ? "red-suit" : "black-suit";
+
+  const rankMap = {
+    Ace: "A",
+    Jack: "J",
+    Queen: "Q",
+    King: "K",
+  };
+  const shortRank = rankMap[rank] || rank; // Use mapped letter or number
+
+  const cardClass = [
+    "card",
+    isSelected ? "selected" : "",
+    isDragging ? "dragging" : "",
+  ].join(" ");
+
+  return (
+    <div
+      ref={(node) => drag(drop(node))}
+      className={cardClass}
+      onClick={onClick}
     >
-        {card}
+      <div className={`card-corner top-left1 ${suitColorClass}`}>
+        {shortRank}
+        <br />
+        {suitSymbol}
+      </div>
+      <div className={`card-content ${suitColorClass}`}>{card}</div>
+      <div className={`card-corner bottom-right1 ${suitColorClass}`}>
+        {shortRank}
+        <br />
+        {suitSymbol}
+      </div>
     </div>
-    );
+  );
 }
 
 export default Card;
