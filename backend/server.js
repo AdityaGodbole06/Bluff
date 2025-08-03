@@ -297,7 +297,7 @@ io.on("connection", (socket) => {
       console.log(oldCenterStack);
       updateGameState(roomCode, fixedGameState);
 
-      io.to(roomCode).emit("bluff-card-selected", {newGameState: fixedGameState, bluffCall, previousPlayer, oldCenterStack, card});
+      io.to(roomCode).emit("bluff-card-selected", {newGameState: fixedGameState, bluffCall, previousPlayer, oldCenterStack, card, selectingPlayer: playerName});
     } else {
       const updatedPlayers = gameState.players.map(p => {
         if (p.name === previousPlayer) {
@@ -329,7 +329,7 @@ io.on("connection", (socket) => {
       console.log(gameState.centerStack);
       updateGameState(roomCode, fixedGameState);
 
-      io.to(roomCode).emit("bluff-card-selected", {newGameState: fixedGameState, bluffCall, previousPlayer, oldCenterStack, card});
+      io.to(roomCode).emit("bluff-card-selected", {newGameState: fixedGameState, bluffCall, previousPlayer, oldCenterStack, card, selectingPlayer: playerName});
     }
   });
 
