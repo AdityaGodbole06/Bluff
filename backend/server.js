@@ -22,9 +22,15 @@ app.use(express.json());
 console.log('Starting application...');
 console.log(`Node ENV: ${process.env.NODE_ENV}`);
 
-// Add a simple endpoint that responds immediately (before MongoDB connection)
+// SUPER SIMPLE endpoint that responds immediately
 app.get('/ready', (req, res) => {
+  console.log('Healthcheck request received!');
   res.status(200).send('ready');
+});
+
+// Test endpoint
+app.get('/test', (req, res) => {
+  res.status(200).send('test');
 });
 
 connectDB();
@@ -451,8 +457,9 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log(`Server is running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV}`);
   console.log(`MongoDB URI configured: ${process.env.MONGODB_URI ? 'Yes' : 'No'}`);
-  console.log(`Health check available at: http://0.0.0.0:${PORT}/health`);
+  console.log(`Health check available at: http://0.0.0.0:${PORT}/ready`);
   console.log(`Server ready to accept connections!`);
+  console.log(`Ready endpoint: http://0.0.0.0:${PORT}/ready`);
 }).on('error', (error) => {
   console.error('Server failed to start:', error);
   process.exit(1);
