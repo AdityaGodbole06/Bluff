@@ -10,7 +10,8 @@ const app = express();
 const server = http.createServer(app);
 
 const allowedOrigins = [
-  'https://bluff-mu.vercel.app', // Your actual Vercel domain
+  'https://bluff-mu.vercel.app', // Your main Vercel domain
+  'https://bluff-r5lz1zog0-adis-projects-c6820125.vercel.app', // Alternative domain
   'http://localhost:5173'         // For development
 ];
 
