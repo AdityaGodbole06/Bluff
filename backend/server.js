@@ -30,6 +30,14 @@ app.get('/', (req, res) => {
   });
 });
 
+// Additional health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'ok',
+    timestamp: new Date().toISOString()
+  });
+});
+
 const games = {};
 
 // Function to get the game state
@@ -423,6 +431,7 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log(`Server is running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV}`);
   console.log(`MongoDB URI configured: ${process.env.MONGODB_URI ? 'Yes' : 'No'}`);
+  console.log(`Health check available at: http://0.0.0.0:${PORT}/health`);
 }).on('error', (error) => {
   console.error('Server failed to start:', error);
   process.exit(1);
