@@ -6,30 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Bluff – Card Game</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" crossorigin href="/Bluff/assets/index-BxGAwYy6.css">
-
   </head>
   <body>
-    <div id="root">
-      <div style="padding: 20px; text-align: center; color: white; background: #1a1a1a; min-height: 100vh; font-family: Arial;">
-        <h1>🚂 Loading Bluff Game...</h1>
-        <p>If you see this message for more than 10 seconds, there's an issue with the JavaScript.</p>
-        <p>Check the browser console for errors.</p>
-      </div>
-    </div>
-    <script>
-      console.log("HTML loaded successfully");
-      console.log("Root element exists:", !!document.getElementById('root'));
-      console.log("Current time:", new Date().toISOString());
-      
-      // Try to load the main script - use the built version
-      const script = document.createElement('script');
-      script.type = 'module';
-      script.crossOrigin = 'anonymous';
-      script.src = '/Bluff/assets/index-DcuW8-1H.js';
-      script.onload = () => console.log("Main script loaded successfully");
-      script.onerror = (e) => console.error("Failed to load main script:", e);
-      document.head.appendChild(script);
-    </script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
