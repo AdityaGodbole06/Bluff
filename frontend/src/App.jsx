@@ -76,7 +76,9 @@ export default function App() {
   const fetchPlayers = async () => {
     if (roomCode) {
       try {
-        const response = await axios.get(`${API_URL}/room/${roomCode}`);
+        const response = await axios.get(`${API_URL}/players/${roomCode}`, {
+          timeout: 3000 // 3 second timeout
+        });
         setPlayers(response.data.players);
       } catch (error) {
         console.error("Error fetching players:", error);
@@ -126,6 +128,19 @@ export default function App() {
       setCenterCard(null);
       setCenterStack([]);
       setCurrentTurnPlayer([]);
+    });
+
+    // Add connection status monitoring
+    newSocket.on("connect", () => {
+      console.log("Socket connected:", newSocket.connected);
+    });
+
+    newSocket.on("disconnect", () => {
+      console.log("Socket disconnected");
+    });
+
+    newSocket.on("connect_error", (error) => {
+      console.error("Socket connection error:", error);
     });
 
     return () => newSocket.disconnect();
