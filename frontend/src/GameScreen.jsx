@@ -122,6 +122,8 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
         setWinner(previousPlayer);
         setGameState(newGameState);
         setCurrentCenterCard(newGameState.centerCard);
+        setNoCardsLeft(null);
+        setEndBluff(false);
       } else {
         console.log("THIS IS THE NEW GAME STATE AFTER BLUFF CALL")
         console.log(newGameState);
@@ -149,6 +151,11 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
         setShowBluffScreen(false);
         setWinner(null);
         setSelectedBluffCard(null);
+        setShowVictoryScreen(false);
+        setVictoryPlayer(null);
+        setNoCardsLeft(null);
+        setEndBluff(false);
+        setIsBluffCorrect(null);
       }, 5000);
       
     });
@@ -910,6 +917,30 @@ useEffect(() => {
             <div className="victory-timer">
               Returning to room in 5 seconds...
             </div>
+            <button 
+              onClick={() => {
+                setShowVictoryScreen(false);
+                setVictoryPlayer(null);
+                setWinner(null);
+                setShowBluffScreen(false);
+                setSelectedBluffCard(null);
+                setNoCardsLeft(null);
+                setEndBluff(false);
+                setIsBluffCorrect(null);
+                socket.emit("return-to-room", { roomCode });
+              }}
+              style={{
+                padding: '10px 20px',
+                margin: '10px',
+                backgroundColor: '#4CAF50',
+                color: 'white',
+                border: 'none',
+                borderRadius: '5px',
+                cursor: 'pointer'
+              }}
+            >
+              Return to Room Now
+            </button>
           </div>
         </div>
       )}
