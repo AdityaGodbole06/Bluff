@@ -363,7 +363,7 @@ useEffect(() => {
       if (endBluff) {
         console.log(noCardsLeft + " wins the game!!!");
       } else {
-        console.log("You guessed CORRECT");
+        console.log("You guessed INCORRECT");
         const updatedPlayerHand = [...playerHand, ...gameState.centerStack];
         setPlayerHand(updatedPlayerHand);
         console.log("PLEASE DONT SHOW")
@@ -372,7 +372,7 @@ useEffect(() => {
         socket.emit("send-message", {
           roomCode,
           playerName: "System",
-          message: `${playerName} guessed correctly!`,
+          message: `${playerName} guessed incorrectly!`,
           system: true  // Flag it as a system message
         });
 
@@ -388,8 +388,8 @@ useEffect(() => {
         
         
   
-        bluffCall = true;
-        setIsBluffCorrect(true);
+        bluffCall = false;
+        setIsBluffCorrect(false);
         // Reset the center stack
         const newGameState = {
           ...gameState,
@@ -423,17 +423,17 @@ useEffect(() => {
       console.log(oldCenterStack);
       console.log(playerHand);
       setEndBluff(true);
-      setIsBluffCorrect(false);
+      setIsBluffCorrect(true);
       setNoCardsLeft(null);
       socket.emit("bluff-card-select", { roomCode, newGameState, bluffCall, previousPlayer, oldCenterStack, card, playerName });
       socket.emit("send-message", {
         roomCode,
         playerName: "System",
-        message: `${playerName} guessed incorrectly!`,
+        message: `${playerName} guessed correctly!`,
         system: true  // Flag it as a system message
       });
 
-      console.log("You guessed INCORRECT");
+      console.log("You guessed CORRECT");
     };
 
     // The timeout is now handled in the bluff-card-selected event listener
