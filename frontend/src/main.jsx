@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
+const API_URL = "https://bluff-production-939f.up.railway.app";
 console.log("API_URL in main.jsx:", API_URL);
 
 try {
