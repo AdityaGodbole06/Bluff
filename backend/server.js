@@ -10,12 +10,22 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: ["http://localhost:5173"],
-    methods: ["GET", "POST"]
+    origin: allowedOrigins,
+    methods: ["GET", "POST"],
+    credentials: true
   }
 });
 
-app.use(cors());
+const allowedOrigins = [
+  'https://bluff-bv7rz6e9b-adis-projects-c6820125.vercel.app/', // Replace with actual frontend URL
+  'http://localhost:5173'             // For development
+];
+
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true
+}));
+
 app.use(express.json());
 
 // Connect to MongoDB
