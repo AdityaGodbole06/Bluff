@@ -4,7 +4,9 @@ import io from "socket.io-client";
 import GameScreen from "./GameScreen"; // Import the GameScreen component
 import "./styles.css";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
+const API_URL = "https://bluff-production-939f.up.railway.app";
+console.log("API_URL is:", API_URL);
+
 const MAX_PLAYERS = 6; // Maximum number of players allowed
 
 export default function App() {
