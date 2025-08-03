@@ -124,6 +124,15 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
         setCurrentCenterCard(newGameState.centerCard);
         setNoCardsLeft(null);
         setEndBluff(false);
+        setShowVictoryScreen(true);
+        setVictoryPlayer(previousPlayer);
+        
+        // Hide victory screen after 5 seconds and return to room
+        setTimeout(() => {
+          setShowVictoryScreen(false);
+          setVictoryPlayer(null);
+          socket.emit("return-to-room", { roomCode });
+        }, 5000);
       } else {
         console.log("THIS IS THE NEW GAME STATE AFTER BLUFF CALL")
         console.log(newGameState);
@@ -144,6 +153,15 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
         
         setGameState(newGameState);
         setCurrentCenterCard(newGameState.centerCard);
+        setShowVictoryScreen(true);
+        setVictoryPlayer(bluffCaller);
+        
+        // Hide victory screen after 5 seconds and return to room
+        setTimeout(() => {
+          setShowVictoryScreen(false);
+          setVictoryPlayer(null);
+          socket.emit("return-to-room", { roomCode });
+        }, 5000);
       }
       
       // Hide bluff screen for all players after selection
@@ -151,14 +169,10 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
         setShowBluffScreen(false);
         setWinner(null);
         setSelectedBluffCard(null);
-        setShowVictoryScreen(false);
-        setVictoryPlayer(null);
         setNoCardsLeft(null);
         setEndBluff(false);
         setIsBluffCorrect(null);
-        
-        // Emit event to return to room
-        socket.emit("return-to-room", { roomCode });
+        // Don't hide victory screen here - let it show for 5 seconds
       }, 3000);
       
     });
