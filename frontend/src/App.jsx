@@ -80,13 +80,15 @@ export default function App() {
         setPlayers(response.data.players);
       } catch (error) {
         console.error("Error fetching players:", error);
+        // Don't update players state on error to prevent UI freezing
+        // The game should continue working even if player list fetch fails
       }
     }
   };
 
   useEffect(() => {
     if (roomCode) {
-      const interval = setInterval(fetchPlayers, 2000); // Fetch players every 2 seconds
+      const interval = setInterval(fetchPlayers, 5000); // Fetch players every 5 seconds
       return () => clearInterval(interval);
     }
   }, [roomCode]);
