@@ -99,9 +99,16 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
       setTimer(null);
     });
 
-    socket.on("bluff-card-selected", ({newGameState, bluffCall, previousPlayer, oldCenterStack, card}) => {
+    socket.on("bluff-card-selected", ({newGameState, bluffCall, previousPlayer, oldCenterStack, card, selectingPlayer}) => {
       console.log(oldCenterStack);
-      setSelectedBluffCard(card);
+      console.log("Card selected by:", selectingPlayer);
+      console.log("Current player:", playerName);
+      
+      // Only set the selected card for the player who made the selection
+      if (selectingPlayer === playerName) {
+        setSelectedBluffCard(card);
+      }
+      
       const thisPlayer = newGameState.players.find(p => p.name === playerName);
       if (thisPlayer) {
         console.log("Hand from server:", thisPlayer.hand);
@@ -129,7 +136,6 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
         console.log("Previous Center Stack from Game State");
         console.log(gameState.centerStack);
 
-
         setWinner(bluffCaller);
         setNoCardsLeft(null);
         setEndBluff(false);
@@ -137,6 +143,13 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
         setGameState(newGameState);
         setCurrentCenterCard(newGameState.centerCard);
       }
+      
+      // Hide bluff screen for all players after selection
+      setTimeout(() => {
+        setShowBluffScreen(false);
+        setWinner(null);
+        setSelectedBluffCard(null);
+      }, 5000);
       
     });
     
@@ -401,11 +414,7 @@ useEffect(() => {
       console.log("You guessed INCORRECT");
     };
 
-    setTimeout(() => {
-      setShowBluffScreen(false);
-      setWinner(null);
-      socket.emit("remove-bluff", { roomCode });
-    }, 5000);
+    // The timeout is now handled in the bluff-card-selected event listener
   
 
     // Hide bluff screen after selection
