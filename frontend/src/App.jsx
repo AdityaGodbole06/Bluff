@@ -4,7 +4,7 @@ import io from "socket.io-client";
 import GameScreen from "./GameScreen"; // Import the GameScreen component
 import "./styles.css";
 
-const API_URL = "http://localhost:4000";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 const MAX_PLAYERS = 6; // Maximum number of players allowed
 
 export default function App() {
@@ -15,8 +15,11 @@ export default function App() {
   const [gameStarted, setGameStarted] = useState(false); // State to track if the game has started
   const [playerCards, setPlayerCards] = useState([]);
   const [centerStack, setCenterStack] = useState([]);
+  const [currentTurnPlayer, setCurrentTurnPlayer] = useState([]);
   const [centerCard, setCenterCard] = useState(null);
-  const socket = io(API_URL);
+  const [socket, setSocket] = useState(null);
+  const [joinError, setJoinError] = useState("");
+
 
   const deck = [
     "Ace of Spades", "2 of Spades", "3 of Spades", "4 of Spades", "5 of Spades", "6 of Spades", "7 of Spades", "8 of Spades", "9 of Spades", "10 of Spades", "Jack of Spades", "Queen of Spades", "King of Spades",
@@ -31,7 +34,6 @@ export default function App() {
       if (playerName.trim()) {
         const response = await axios.post(`${API_URL}/create-room`, { playerName });
         setRoomCode(response.data.roomCode);
-        setPlayerName("");
         setIsLeader(true); // The player who creates the room is the leader
         socket.emit("join-room", { roomCode: response.data.roomCode, playerName });
         console.log("Room created with code:", response.data.roomCode);
@@ -49,15 +51,21 @@ export default function App() {
         const response = await axios.post(`${API_URL}/join-room`, { playerName, roomCode: code });
         if (response.data.success) {
           setRoomCode(code);
-          setPlayerName("");
+          setJoinError(""); // Clear any previous error
           socket.emit("join-room", { roomCode: code, playerName });
           console.log("Joined room with code:", code);
         } else {
-          alert(response.data.message);
+          setJoinError(response.data.message || "Failed to join room.");
         }
       } catch (error) {
         console.error("Error joining room:", error);
-        alert("Failed to join room. Please try again.");
+        let message = "Failed to join room. Please try again.";
+        if (error.response && error.response.data && error.response.data.message) {
+          message = error.response.data.message;
+        } else if (error.message) {
+          message = error.message;
+        }
+        setJoinError(message);
       }
     }
   };
@@ -81,15 +89,45 @@ export default function App() {
   }, [roomCode]);
   
   useEffect(() => {
-    socket.on("game-started", ({ cards, centerCard }) => {
+    const newSocket = io.connect(API_URL);
+    setSocket(newSocket);
+
+    newSocket.on("game-started", ({ cards, centerCard, currentTurnPlayer }) => {
       console.log("Game started event received");
       setPlayerCards(cards);
       setCenterCard(centerCard);
       setCenterStack([centerCard]);
+      setCurrentTurnPlayer(currentTurnPlayer);
       setGameStarted(true);
-
     });
-  }, [socket]);
+
+    newSocket.on("player-joined", ({ roomCode, playerName }) => {
+      console.log("HELLO " + playerName + " to " + roomCode);
+    });
+
+    newSocket.on("player-left", ({ roomCode, playerName, remainingPlayers, newLeader }) => {
+      console.log(`${playerName} left the room`);
+      setPlayers(remainingPlayers);
+      // Update leader status - check if current player is the new leader
+      setIsLeader(newLeader);
+      console.log("newLeader");
+      console.log(newLeader);
+    });
+
+    newSocket.on("game-ended", ({ roomCode }) => {
+      console.log("Game ended, returning to room");
+      setGameStarted(false);
+      setPlayerCards([]);
+      setCenterCard(null);
+      setCenterStack([]);
+      setCurrentTurnPlayer([]);
+    });
+
+    return () => newSocket.disconnect();
+  }, []);
+
+ 
+
 
   const shuffleDeck = (deck) => {
     const shuffledDeck = deck.slice();
@@ -116,50 +154,85 @@ export default function App() {
       playersCards[player].push(card);
     });
 
-    socket.emit("start-game", { roomCode, playersCards, centerCard });
+    const currentPlayer = players[0]; 
+    socket.emit("start-game", { roomCode, playersCards, centerCard, currentPlayer, playerName });
   };
 
   return (
     <div>
       {!gameStarted ? (
         !roomCode ? (
-          <form className="new-player-form" onSubmit={handleCreateRoom}>
-            <div className="form-row">
-              <label htmlFor="player">Enter Name</label>
-              <input
-                type="text"
-                id="player"
-                value={playerName}
-                onChange={(e) => setPlayerName(e.target.value)}
-              />
+          <div className="welcome-container">
+            <div className="welcome-container-row">
+
+              <div className="welcome-heading">
+                <h1 className="title">Welcome to Bluff</h1>
+                <p className="tagline">A fast-paced card game of lies and luck</p>
+              </div>
+
+              <div className="welcome-box">
+                {joinError && (
+                  <div className="error-message">
+                    {joinError}
+                  </div>
+                )}
+                <p className="subtitle">Enter your name to get started</p>
+                <form className="new-player-form" onSubmit={handleCreateRoom}>
+                  <input
+                    type="text"
+                    placeholder="Your name"
+                    value={playerName}
+                    onChange={(e) => setPlayerName(e.target.value)}
+                    className="input-field"
+                  />
+                  <div className="button-group">
+                    <button type="submit" className="btn">Create Room</button>
+                    <button type="button" className="btn" onClick={handleJoinRoom}>Join Room</button>
+                  </div>
+                </form>
+              </div>
             </div>
-            <button type="submit" className="btn">
-              Create Room
-            </button>
-            <button type="button" className="btn" onClick={handleJoinRoom}>
-              Join Room
-            </button>
-          </form>
+          </div>
+
+
         ) : (
-          <div>
-            <h2>Room Code: {roomCode}</h2>
-            <h3>Players ({players.length}/{MAX_PLAYERS}):</h3>
-            <ul>
+          <div className="room-info-box">
+            <div className="lobby-header">
+              <button 
+                type="button" 
+                className="btn back-button" 
+                onClick={() => {
+                  setRoomCode("");
+                  setIsLeader(false);
+                  setPlayers([]);
+                  setJoinError("");
+                  if (socket) {
+                    socket.emit("leave-room", { roomCode, playerName });
+                  }
+                }}
+              >
+                ← Back to Menu
+              </button>
+            </div>
+            <h2 className="room-code">Room Code: {roomCode}</h2>
+            <h3 className="player-count">Players ({players.length}/{MAX_PLAYERS}):</h3>
+            <ul className="player-list-start">
               {players.map((player, index) => (
-                <li key={index}>{player}</li>
+                <li key={index} className="player-name">{player}</li>
               ))}
             </ul>
+
             {isLeader ? (
               <button type="button" className="btn start-button" onClick={handleStartGame}>
                 Start Game
               </button>
             ) : (
-              <p>Waiting for leader to start the game...</p>
+              <p className="waiting-text">Waiting for leader to start the game...</p>
             )}
           </div>
         )
       ) : (
-        <GameScreen players={players} playerCards={playerCards} centerCard={centerCard} centerStack={centerStack}        /> // Pass playerCards prop to GameScreen
+        <GameScreen players={players} playerCards={playerCards} centerCard={centerCard} centerStack={centerStack} playerName={playerName} roomCode={roomCode} socket={socket}/> // Pass playerCards prop to GameScreen
       )}
     </div>
   );
