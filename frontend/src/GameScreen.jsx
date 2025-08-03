@@ -372,7 +372,7 @@ useEffect(() => {
         socket.emit("send-message", {
           roomCode,
           playerName: "System",
-          message: `${playerName} guessed incorrectly!`,
+          message: `${playerName} guessed correctly!`,
           system: true  // Flag it as a system message
         });
 
@@ -388,8 +388,8 @@ useEffect(() => {
         
         
   
-        bluffCall = false;
-        setIsBluffCorrect(false);
+        bluffCall = true;
+        setIsBluffCorrect(true);
         // Reset the center stack
         const newGameState = {
           ...gameState,
@@ -423,13 +423,13 @@ useEffect(() => {
       console.log(oldCenterStack);
       console.log(playerHand);
       setEndBluff(true);
-      setIsBluffCorrect(true);
+      setIsBluffCorrect(false);
       setNoCardsLeft(null);
       socket.emit("bluff-card-select", { roomCode, newGameState, bluffCall, previousPlayer, oldCenterStack, card, playerName });
       socket.emit("send-message", {
         roomCode,
         playerName: "System",
-        message: `${playerName} guessed correctly!`,
+        message: `${playerName} guessed incorrectly!`,
         system: true  // Flag it as a system message
       });
 
