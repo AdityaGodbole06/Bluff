@@ -156,13 +156,28 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
         setNoCardsLeft(null);
         setEndBluff(false);
         setIsBluffCorrect(null);
-      }, 5000);
+        
+        // Emit event to return to room
+        socket.emit("return-to-room", { roomCode });
+      }, 3000);
       
     });
     
 
     socket.on("next-card", ({roomCode}) => {
       console.log("HELLO" + roomCode);
+    });
+    
+    socket.on("game-ended", ({ roomCode }) => {
+      console.log("Game ended, returning to room");
+      setShowBluffScreen(false);
+      setWinner(null);
+      setSelectedBluffCard(null);
+      setShowVictoryScreen(false);
+      setVictoryPlayer(null);
+      setNoCardsLeft(null);
+      setEndBluff(false);
+      setIsBluffCorrect(null);
     });
     
   }, [socket]);
@@ -915,7 +930,7 @@ useEffect(() => {
               {victoryPlayer} wins the game!
             </p>
             <div className="victory-timer">
-              Returning to room in 5 seconds...
+              Returning to room in 3 seconds...
             </div>
             <button 
               onClick={() => {
