@@ -416,7 +416,7 @@ const generateRoomCode = () => {
   return code;
 };
 
-const PORT = process.env.PORT || 4000;
+const PORT = 4000; // Force port 4000 for Railway
 
 // Add error handling for server startup
 server.listen(PORT, '0.0.0.0', () => {
