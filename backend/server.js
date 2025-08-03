@@ -76,6 +76,26 @@ app.get('/ping', (req, res) => {
   res.status(200).send('pong');
 });
 
+// Simple players endpoint that doesn't use database
+app.get('/players/:roomCode', (req, res) => {
+  try {
+    const { roomCode } = req.params;
+    console.log(`Fetching players for room: ${roomCode}`);
+    
+    const inMemoryRoom = rooms[roomCode];
+    if (inMemoryRoom) {
+      console.log(`Room found in memory: ${roomCode}, players:`, inMemoryRoom.players);
+      res.status(200).json({ players: inMemoryRoom.players });
+    } else {
+      console.log(`Room not found in memory: ${roomCode}`);
+      res.status(404).json({ message: "Room not found" });
+    }
+  } catch (error) {
+    console.error("Error fetching players:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
 const games = {};
 
 // Function to get the game state
