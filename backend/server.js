@@ -137,16 +137,37 @@ app.post("/join-room", async (req, res) => {
 app.get("/room/:roomCode", async (req, res) => {
   try {
     const { roomCode } = req.params;
+    console.log(`Fetching room: ${roomCode}`);
+    
+    // First try to get from database
     const room = await RoomService.getRoom(roomCode);
     
     if (room) {
+      console.log(`Room found in database: ${roomCode}, players:`, room.players);
       res.status(200).json({ players: room.players });
     } else {
-      res.status(400).json({ message: "Room not found" });
+      // Fallback to in-memory rooms
+      console.log(`Room not found in database, checking in-memory: ${roomCode}`);
+      const inMemoryRoom = rooms[roomCode];
+      if (inMemoryRoom) {
+        console.log(`Room found in memory: ${roomCode}, players:`, inMemoryRoom.players);
+        res.status(200).json({ players: inMemoryRoom.players });
+      } else {
+        console.log(`Room not found anywhere: ${roomCode}`);
+        res.status(404).json({ message: "Room not found" });
+      }
     }
   } catch (error) {
     console.error("Error fetching room:", error);
-    res.status(500).json({ message: "Internal server error" });
+    // Fallback to in-memory rooms on error
+    const { roomCode } = req.params;
+    const inMemoryRoom = rooms[roomCode];
+    if (inMemoryRoom) {
+      console.log(`Fallback to in-memory room: ${roomCode}, players:`, inMemoryRoom.players);
+      res.status(200).json({ players: inMemoryRoom.players });
+    } else {
+      res.status(500).json({ message: "Internal server error" });
+    }
   }
 });
 
