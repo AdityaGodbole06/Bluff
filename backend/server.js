@@ -8,6 +8,13 @@ require("dotenv").config({ path: "./config.env" });
 
 const app = express();
 const server = http.createServer(app);
+
+const allowedOrigins = [
+  'https://bluff-bv7rz6e9b-adis-projects-c6820125.vercel.app/', // Replace with actual frontend URL
+  'http://localhost:5173'             // For development
+];
+
+
 const io = socketIo(server, {
   cors: {
     origin: allowedOrigins,
@@ -16,10 +23,6 @@ const io = socketIo(server, {
   }
 });
 
-const allowedOrigins = [
-  'https://bluff-bv7rz6e9b-adis-projects-c6820125.vercel.app/', // Replace with actual frontend URL
-  'http://localhost:5173'             // For development
-];
 
 app.use(cors({
   origin: allowedOrigins,
