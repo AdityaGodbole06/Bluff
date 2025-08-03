@@ -19,7 +19,16 @@ app.use(cors());
 app.use(express.json());
 
 // Connect to MongoDB
+console.log('Starting application...');
+console.log(`Port: ${PORT}`);
+console.log(`Node ENV: ${process.env.NODE_ENV}`);
+
 connectDB();
+
+// Simple test endpoint
+app.get('/test', (req, res) => {
+  res.status(200).send('OK');
+});
 
 // Health check endpoint for Railway
 app.get('/', (req, res) => {
