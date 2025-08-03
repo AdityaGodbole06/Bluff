@@ -442,6 +442,7 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log(`Environment: ${process.env.NODE_ENV}`);
   console.log(`MongoDB URI configured: ${process.env.MONGODB_URI ? 'Yes' : 'No'}`);
   console.log(`Health check available at: http://0.0.0.0:${PORT}/health`);
+  console.log(`Server ready to accept connections!`);
 }).on('error', (error) => {
   console.error('Server failed to start:', error);
   process.exit(1);
