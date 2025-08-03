@@ -329,10 +329,14 @@ io.on("connection", (socket) => {
         currentTurnPlayer: previousPlayer };
 
       console.log(fixedGameState.players[0].hand);
-      console.log("fixedGameState.players[1].hand");
-      console.log(fixedGameState.players[1].hand);
-      console.log("fixedGameState.players[2].hand");
-      console.log(fixedGameState.players[2].hand);
+      if (fixedGameState.players[1]) {
+        console.log("fixedGameState.players[1].hand");
+        console.log(fixedGameState.players[1].hand);
+      }
+      if (fixedGameState.players[2]) {
+        console.log("fixedGameState.players[2].hand");
+        console.log(fixedGameState.players[2].hand);
+      }
 
       console.log("oldCenterStack");
       console.log(oldCenterStack);
@@ -359,10 +363,14 @@ io.on("connection", (socket) => {
       console.log(fixedGameState);
       console.log("fixedGameState.players");
       console.log(fixedGameState.players[0].hand);
-      console.log("fixedGameState.players[1].hand");
-      console.log(fixedGameState.players[1].hand);
-      console.log("fixedGameState.players[2].hand");
-      console.log(fixedGameState.players[2].hand);
+      if (fixedGameState.players[1]) {
+        console.log("fixedGameState.players[1].hand");
+        console.log(fixedGameState.players[1].hand);
+      }
+      if (fixedGameState.players[2]) {
+        console.log("fixedGameState.players[2].hand");
+        console.log(fixedGameState.players[2].hand);
+      }
 
       console.log("oldCenterStack");
       console.log(oldCenterStack);
