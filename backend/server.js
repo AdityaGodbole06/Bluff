@@ -46,6 +46,11 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Super simple endpoint for Railway healthcheck
+app.get('/ping', (req, res) => {
+  res.status(200).send('pong');
+});
+
 const games = {};
 
 // Function to get the game state
