@@ -9,7 +9,17 @@ console.log("Environment variables:", {
 });
 
 try {
-  const root = ReactDOM.createRoot(document.getElementById('root'));
+  console.log("Starting React app...");
+  const rootElement = document.getElementById('root');
+  console.log("Root element found:", rootElement);
+  
+  if (!rootElement) {
+    throw new Error("Root element not found!");
+  }
+  
+  const root = ReactDOM.createRoot(rootElement);
+  console.log("React root created");
+  
   root.render(
     <React.StrictMode>
       <App />
@@ -18,4 +28,12 @@ try {
   console.log("App rendered successfully");
 } catch (err) {
   console.error("CRITICAL RUNTIME ERROR in main.jsx:", err);
+  // Add immediate visual feedback
+  document.body.innerHTML = `
+    <div style="padding: 20px; color: red; background: white; font-family: Arial;">
+      <h1>React Error</h1>
+      <p>Error: ${err.message}</p>
+      <p>Stack: ${err.stack}</p>
+    </div>
+  `;
 }

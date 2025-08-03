@@ -12,6 +12,9 @@ const MAX_PLAYERS = 6; // Maximum number of players allowed
 export default function App() {
   console.log("App component is loading...");
   
+  // Add immediate visual feedback
+  console.log("Rendering test component...");
+  
   // Simple test component to see if React is working
   return (
     <div style={{ 
