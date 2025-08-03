@@ -119,21 +119,25 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
       console.log(newGameState);
       setIsBluffCorrect(bluffCall);
       if (!bluffCall) {
-        setWinner(previousPlayer);
+        // Incorrect bluff call - previous player gets the cards
         setGameState(newGameState);
         setCurrentCenterCard(newGameState.centerCard);
         setNoCardsLeft(null);
         setEndBluff(false);
+        
+        // Show brief result message
+        setWinner(previousPlayer);
         setShowVictoryScreen(true);
         setVictoryPlayer(previousPlayer);
         
-        // Hide victory screen after 5 seconds and return to room
+        // Hide victory screen after 3 seconds and continue game
         setTimeout(() => {
           setShowVictoryScreen(false);
           setVictoryPlayer(null);
-          socket.emit("return-to-room", { roomCode });
-        }, 5000);
+          setWinner(null);
+        }, 3000);
       } else {
+        // Correct bluff call - bluff caller gets the cards
         console.log("THIS IS THE NEW GAME STATE AFTER BLUFF CALL")
         console.log(newGameState);
         console.log(newGameState.players);
@@ -147,21 +151,22 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
         console.log("Previous Center Stack from Game State");
         console.log(gameState.centerStack);
 
-        setWinner(bluffCaller);
+        setGameState(newGameState);
+        setCurrentCenterCard(newGameState.centerCard);
         setNoCardsLeft(null);
         setEndBluff(false);
         
-        setGameState(newGameState);
-        setCurrentCenterCard(newGameState.centerCard);
+        // Show brief result message
+        setWinner(bluffCaller);
         setShowVictoryScreen(true);
         setVictoryPlayer(bluffCaller);
         
-        // Hide victory screen after 5 seconds and return to room
+        // Hide victory screen after 3 seconds and continue game
         setTimeout(() => {
           setShowVictoryScreen(false);
           setVictoryPlayer(null);
-          socket.emit("return-to-room", { roomCode });
-        }, 5000);
+          setWinner(null);
+        }, 3000);
       }
       
       // Hide bluff screen for all players after selection
