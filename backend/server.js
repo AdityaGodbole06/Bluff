@@ -22,6 +22,11 @@ app.use(express.json());
 console.log('Starting application...');
 console.log(`Node ENV: ${process.env.NODE_ENV}`);
 
+// Add a simple endpoint that responds immediately (before MongoDB connection)
+app.get('/ready', (req, res) => {
+  res.status(200).send('ready');
+});
+
 connectDB();
 
 // Simple test endpoint
