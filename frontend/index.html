@@ -20,7 +20,14 @@
       console.log("HTML loaded successfully");
       console.log("Root element exists:", !!document.getElementById('root'));
       console.log("Current time:", new Date().toISOString());
+      
+      // Try to load the main script
+      const script = document.createElement('script');
+      script.type = 'module';
+      script.src = '/src/main.jsx';
+      script.onload = () => console.log("Main script loaded successfully");
+      script.onerror = (e) => console.error("Failed to load main script:", e);
+      document.head.appendChild(script);
     </script>
-    <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
