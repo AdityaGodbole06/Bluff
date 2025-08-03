@@ -4,12 +4,14 @@ import io from "socket.io-client";
 import GameScreen from "./GameScreen"; // Import the GameScreen component
 import "./styles.css";
 
-const API_URL = "https://bluff-production-939f.up.railway.app";
+const API_URL = import.meta.env.VITE_API_URL || "https://bluff-production-939f.up.railway.app";
 console.log("API_URL is:", API_URL);
 
 const MAX_PLAYERS = 6; // Maximum number of players allowed
 
 export default function App() {
+  console.log("App component is loading...");
+  
   const [playerName, setPlayerName] = useState("");
   const [players, setPlayers] = useState([]);
   const [roomCode, setRoomCode] = useState("");
@@ -160,83 +162,97 @@ export default function App() {
     socket.emit("start-game", { roomCode, playersCards, centerCard, currentPlayer, playerName });
   };
 
-  return (
-    <div>
-      {!gameStarted ? (
-        !roomCode ? (
-          <div className="welcome-container">
-            <div className="welcome-container-row">
+  try {
+    return (
+      <div>
+        {!gameStarted ? (
+          !roomCode ? (
+            <div className="welcome-container">
+              <div className="welcome-container-row">
 
-              <div className="welcome-heading">
-                <h1 className="title">Welcome to Bluff</h1>
-                <p className="tagline">A fast-paced card game of lies and luck</p>
-              </div>
+                <div className="welcome-heading">
+                  <h1 className="title">Welcome to Bluff</h1>
+                  <p className="tagline">A fast-paced card game of lies and luck</p>
+                </div>
 
-              <div className="welcome-box">
-                {joinError && (
-                  <div className="error-message">
-                    {joinError}
-                  </div>
-                )}
-                <p className="subtitle">Enter your name to get started</p>
-                <form className="new-player-form" onSubmit={handleCreateRoom}>
-                  <input
-                    type="text"
-                    placeholder="Your name"
-                    value={playerName}
-                    onChange={(e) => setPlayerName(e.target.value)}
-                    className="input-field"
-                  />
-                  <div className="button-group">
-                    <button type="submit" className="btn">Create Room</button>
-                    <button type="button" className="btn" onClick={handleJoinRoom}>Join Room</button>
-                  </div>
-                </form>
+                <div className="welcome-box">
+                  {joinError && (
+                    <div className="error-message">
+                      {joinError}
+                    </div>
+                  )}
+                  <p className="subtitle">Enter your name to get started</p>
+                  <form className="new-player-form" onSubmit={handleCreateRoom}>
+                    <input
+                      type="text"
+                      placeholder="Your name"
+                      value={playerName}
+                      onChange={(e) => setPlayerName(e.target.value)}
+                      className="input-field"
+                    />
+                    <div className="button-group">
+                      <button type="submit" className="btn">Create Room</button>
+                      <button type="button" className="btn" onClick={handleJoinRoom}>Join Room</button>
+                    </div>
+                  </form>
+                </div>
               </div>
             </div>
-          </div>
 
 
+          ) : (
+            <div className="room-info-box">
+              <div className="lobby-header">
+                <button 
+                  type="button" 
+                  className="btn back-button" 
+                  onClick={() => {
+                    setRoomCode("");
+                    setIsLeader(false);
+                    setPlayers([]);
+                    setJoinError("");
+                    if (socket) {
+                      socket.emit("leave-room", { roomCode, playerName });
+                    }
+                  }}
+                >
+                  ← Back to Menu
+                </button>
+              </div>
+              <h2 className="room-code">Room Code: {roomCode}</h2>
+              <h3 className="player-count">Players ({players.length}/{MAX_PLAYERS}):</h3>
+              <ul className="player-list-start">
+                {players.map((player, index) => (
+                  <li key={index} className="player-name">{player}</li>
+                ))}
+              </ul>
+
+              {isLeader ? (
+                <button type="button" className="btn start-button" onClick={handleStartGame}>
+                  Start Game
+                </button>
+              ) : (
+                <p className="waiting-text">Waiting for leader to start the game...</p>
+              )}
+            </div>
+          )
         ) : (
-          <div className="room-info-box">
-            <div className="lobby-header">
-              <button 
-                type="button" 
-                className="btn back-button" 
-                onClick={() => {
-                  setRoomCode("");
-                  setIsLeader(false);
-                  setPlayers([]);
-                  setJoinError("");
-                  if (socket) {
-                    socket.emit("leave-room", { roomCode, playerName });
-                  }
-                }}
-              >
-                ← Back to Menu
-              </button>
-            </div>
-            <h2 className="room-code">Room Code: {roomCode}</h2>
-            <h3 className="player-count">Players ({players.length}/{MAX_PLAYERS}):</h3>
-            <ul className="player-list-start">
-              {players.map((player, index) => (
-                <li key={index} className="player-name">{player}</li>
-              ))}
-            </ul>
-
-            {isLeader ? (
-              <button type="button" className="btn start-button" onClick={handleStartGame}>
-                Start Game
-              </button>
-            ) : (
-              <p className="waiting-text">Waiting for leader to start the game...</p>
-            )}
-          </div>
-        )
-      ) : (
-        <GameScreen players={players} playerCards={playerCards} centerCard={centerCard} centerStack={centerStack} playerName={playerName} roomCode={roomCode} socket={socket}/> // Pass playerCards prop to GameScreen
-      )}
-    </div>
-  );
+          <GameScreen players={players} playerCards={playerCards} centerCard={centerCard} centerStack={centerStack} playerName={playerName} roomCode={roomCode} socket={socket}/> // Pass playerCards prop to GameScreen
+        )}
+      </div>
+    );
+  } catch (error) {
+    console.error("Error rendering App:", error);
+    return (
+      <div style={{ padding: '20px', textAlign: 'center', color: 'white', backgroundColor: '#1a1a1a', minHeight: '100vh' }}>
+        <h1>Bluff Game</h1>
+        <p>Something went wrong loading the game.</p>
+        <p>Error: {error.message}</p>
+        <button onClick={() => window.location.reload()} style={{ padding: '10px 20px', margin: '10px', backgroundColor: '#4CAF50', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
+          Reload Page
+        </button>
+      </div>
+    );
+  }
   
 }
