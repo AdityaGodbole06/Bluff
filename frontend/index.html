@@ -9,7 +9,18 @@
 
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div style="padding: 20px; text-align: center; color: white; background: #1a1a1a; min-height: 100vh; font-family: Arial;">
+        <h1>🚂 Loading Bluff Game...</h1>
+        <p>If you see this message for more than 10 seconds, there's an issue with the JavaScript.</p>
+        <p>Check the browser console for errors.</p>
+      </div>
+    </div>
+    <script>
+      console.log("HTML loaded successfully");
+      console.log("Root element exists:", !!document.getElementById('root'));
+      console.log("Current time:", new Date().toISOString());
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
