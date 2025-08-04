@@ -1,163 +1,97 @@
-# Bluff Card Game
+# 🃏 Bluff Card Game
 
 A real-time multiplayer card game built with React, Node.js, Socket.IO, and MongoDB.
 
-## Features
+## 🎮 Play Now
+
+**Live Game**: [https://bluff-mu.vercel.app](https://bluff-mu.vercel.app)
+
+## ✨ Features
 
 - Real-time multiplayer gameplay
-- Room-based game sessions
-- Persistent game state with MongoDB
+- Room-based game sessions with unique codes
+- Persistent game state with MongoDB Atlas
 - Modern, responsive UI
-- Cross-platform compatibility
+- Real-time chat during gameplay
+- 10-second timer when players have no cards
+- Victory/Defeat screens with distinct styling
 
-## Tech Stack
+## 🛠️ Tech Stack
 
-### Frontend
-- React 18
-- Vite
-- Socket.IO Client
-- CSS3 with modern styling
+- **Frontend**: React 18, Vite, Socket.IO Client
+- **Backend**: Node.js, Express.js, Socket.IO
+- **Database**: MongoDB Atlas
+- **Deployment**: Vercel (Frontend), Railway (Backend)
 
-### Backend
-- Node.js
-- Express.js
-- Socket.IO
-- MongoDB with Mongoose
-- CORS enabled
-
-## Quick Start
+## 🚀 Quick Start
 
 ### Prerequisites
 - Node.js (v16 or higher)
-- MongoDB (local or MongoDB Atlas)
+- MongoDB Atlas account
 
-### Installation
+### Local Development
 
 1. **Clone the repository**
    ```bash
-   git clone <your-repo-url>
+   git clone https://github.com/AdityaGodbole06/Bluff.git
    cd bluff
    ```
 
-2. **Install backend dependencies**
+2. **Install dependencies**
    ```bash
+   # Backend
    cd backend
+   npm install
+   
+   # Frontend
+   cd ../frontend
    npm install
    ```
 
 3. **Set up environment variables**
    ```bash
-   # Copy the config file
+   cd backend
    cp config.env.example config.env
-   
-   # Edit config.env with your MongoDB connection string
-   MONGODB_URI=mongodb://localhost:27017/bluff-game
-   PORT=4000
-   NODE_ENV=development
+   # Edit config.env with your MongoDB Atlas connection string
    ```
 
-4. **Install frontend dependencies**
+4. **Start development servers**
    ```bash
-   cd ../frontend
-   npm install
-   ```
-
-5. **Start the development servers**
-
-   **Backend:**
-   ```bash
+   # Backend
    cd backend
    npm run dev
-   ```
-
-   **Frontend:**
-   ```bash
+   
+   # Frontend (in new terminal)
    cd frontend
    npm run dev
    ```
 
-6. **Open your browser**
-   - Frontend: http://localhost:5173
-   - Backend: http://localhost:4000
+## 🎯 How to Play
 
-## Database Setup
+1. **Create or join a room** - Enter your name and room code
+2. **Wait for players** - Room creator starts the game
+3. **Play cards** - Select cards and claim their rank
+4. **Call bluff** - If you suspect someone is lying
+5. **Win** - First player to get rid of all cards wins!
 
-### Local MongoDB
-1. Install MongoDB locally
-2. Start MongoDB service
-3. Use connection string: `mongodb://localhost:27017/bluff-game`
-
-### MongoDB Atlas (Recommended for deployment)
-1. Create a free account at [MongoDB Atlas](https://www.mongodb.com/atlas)
-2. Create a new cluster
-3. Get your connection string
-4. Update `config.env` with your connection string
-
-### Test Database Connection
-```bash
-cd backend
-node setup.js
-```
-
-## Deployment
-
-See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
-
-### Quick Deployment Options
-
-1. **Backend**: Deploy to Heroku, Railway, or Render
-2. **Frontend**: Deploy to Vercel, Netlify, or GitHub Pages
-3. **Database**: Use MongoDB Atlas (free tier available)
-
-## Game Rules
-
-Bluff is a card game where players try to get rid of all their cards by playing them face-down and claiming they are of a specific rank. Other players can call "bluff" if they suspect the claim is false.
-
-### How to Play
-1. Create or join a room
-2. Wait for the leader to start the game
-3. Play cards by selecting them and clicking "Place Cards"
-4. Call bluff if you suspect another player is lying
-5. The first player to get rid of all cards wins!
-
-## API Endpoints
+## 📡 API Endpoints
 
 - `POST /create-room` - Create a new game room
 - `POST /join-room` - Join an existing room
 - `GET /room/:roomCode` - Get room information
+- `GET /players/:roomCode` - Get players in a room
 
-## Socket.IO Events
-
-### Client to Server
-- `join-room` - Join a game room
-- `start-game` - Start the game
-- `place-card` - Place cards on the table
-- `bluff-call` - Call another player's bluff
-- `leave-room` - Leave the room
-
-### Server to Client
-- `player-joined` - New player joined
-- `player-left` - Player left the room
-- `game-started` - Game has started
-- `update-game` - Game state update
-- `bluff-called` - Bluff was called
-
-## Contributing
+## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+4. Submit a pull request
 
-## License
+## 📄 License
 
-This project is licensed under the MIT License.
+MIT License
 
-## Support
+---
 
-If you encounter any issues:
-1. Check the [DEPLOYMENT.md](./DEPLOYMENT.md) for troubleshooting
-2. Verify your MongoDB connection
-3. Check the browser console and server logs
-4. Open an issue on GitHub
+**Happy gaming! 🃏**
