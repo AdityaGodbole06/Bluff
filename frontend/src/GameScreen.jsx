@@ -253,7 +253,7 @@ useEffect(() => {
   
 
   useEffect(() => {
-    if (timeLeft === 0 && noCardsLeft && !endBluff) {
+    if (timeLeft === 0 && noCardsLeft && !endBluff && timerStartedRef.current) {
       setShowBluffScreen(false);
       setShowVictoryScreen(true);
       setVictoryPlayer(noCardsLeft);
