@@ -18,7 +18,7 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
   const [winner, setWinner] = useState(null);
   const [noCardsLeft, setNoCardsLeft] = useState(null);
   const [timer, setTimer] = useState(null);
-  const [timeLeft, setTimeLeft] = useState(10);
+  const [timeLeft, setTimeLeft] = useState(null);
   const [endBluff, setEndBluff] = useState(false);
   const [isBluffCorrect, setIsBluffCorrect] = useState(null);
 
@@ -180,9 +180,7 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
         setWinner(null);
         setSelectedBluffCard(null);
         // Only reset endBluff if the game is not ending
-        const shouldEndGame = (previousPlayerState && previousPlayerState.hand.length === 0) || 
-                             (bluffCallerState && bluffCallerState.hand.length === 0);
-        if (!shouldEndGame) {
+        if (!noCardsLeft) {
           setEndBluff(false);
         }
         setIsBluffCorrect(null);
@@ -214,7 +212,7 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
 useEffect(() => {
   let interval;
 
-  if (noCardsLeft !== null && !endBluff) {
+  if (noCardsLeft !== null && !endBluff && timeLeft === null) {
     setTimeLeft(10);
     interval = setInterval(() => {
       setTimeLeft((prev) => {
@@ -231,7 +229,7 @@ useEffect(() => {
   }
 
   return () => clearInterval(interval);
-}, [noCardsLeft, endBluff]);
+}, [noCardsLeft, endBluff, timeLeft]);
 
 
   useEffect(() => {
