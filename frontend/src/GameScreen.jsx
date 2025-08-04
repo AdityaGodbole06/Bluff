@@ -253,7 +253,7 @@ useEffect(() => {
 
   useEffect(() => {
     // Show victory screen when timer runs out (no bluff called)
-    if (timeLeft === 0 && noCardsLeft && !endBluff && timerStartedRef.current) {
+    if (timeLeft === 0 && noCardsLeft && !endBluff) {
       setShowBluffScreen(false);
       setShowVictoryScreen(true);
       setVictoryPlayer(noCardsLeft);
