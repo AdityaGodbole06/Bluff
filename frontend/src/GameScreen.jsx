@@ -126,7 +126,6 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
         // Incorrect bluff call - previous player gets the cards
         setGameState(newGameState);
         setCurrentCenterCard(newGameState.centerCard);
-        setEndBluff(false);
         
         // Check if the previous player now has no cards (game should end)
         const previousPlayerState = newGameState.players.find(p => p.name === previousPlayer);
@@ -140,6 +139,7 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
         } else {
           console.log("Previous player still has cards - continuing game");
           setNoCardsLeft(null);
+          setEndBluff(false); // Reset bluff state for continuing game
         }
       } else {
         // Correct bluff call - bluff caller gets the cards
@@ -158,7 +158,6 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
 
         setGameState(newGameState);
         setCurrentCenterCard(newGameState.centerCard);
-        setEndBluff(false);
         
         // Check if the bluff caller now has no cards (game should end)
         const bluffCallerState = newGameState.players.find(p => p.name === selectingPlayer);
@@ -172,6 +171,7 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
         } else {
           console.log("Bluff caller still has cards - continuing game");
           setNoCardsLeft(null);
+          setEndBluff(false); // Reset bluff state for continuing game
         }
       }
       
@@ -301,6 +301,7 @@ useEffect(() => {
       // Also clear the timeLeft to prevent timer conflicts
       setTimeLeft(0);
       timerStartedRef.current = false;
+      setEndBluff(true); // Mark that bluff has started
   
   
       const placedCards = previousTurn.cardsPlaced; 
