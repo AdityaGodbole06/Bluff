@@ -136,12 +136,8 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
           setShowVictoryScreen(true);
           setVictoryPlayer(previousPlayer);
           
-          // Hide victory screen after 5 seconds and return to room
-          setTimeout(() => {
-            setShowVictoryScreen(false);
-            setVictoryPlayer(null);
-            socket.emit("return-to-room", { roomCode });
-          }, 5000);
+          // Don't hide bluff screen immediately - let the card show for 3 seconds first
+          // The timeout below will handle hiding the bluff screen
         } else {
           console.log("Previous player still has cards - continuing game");
           setNoCardsLeft(null);
@@ -174,12 +170,8 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
           setShowVictoryScreen(true);
           setVictoryPlayer(selectingPlayer);
           
-          // Hide victory screen after 5 seconds and return to room
-          setTimeout(() => {
-            setShowVictoryScreen(false);
-            setVictoryPlayer(null);
-            socket.emit("return-to-room", { roomCode });
-          }, 5000);
+          // Don't hide bluff screen immediately - let the card show for 3 seconds first
+          // The timeout below will handle hiding the bluff screen
         } else {
           console.log("Bluff caller still has cards - continuing game");
           setNoCardsLeft(null);
@@ -193,7 +185,16 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
         setSelectedBluffCard(null);
         setEndBluff(false);
         setIsBluffCorrect(null);
-        // Don't clear noCardsLeft here - let the end-game logic handle it
+        
+        // If game should end, show victory screen and return to room
+        if (noCardsLeft) {
+          console.log("Game ending after bluff resolution");
+          setTimeout(() => {
+            setShowVictoryScreen(false);
+            setVictoryPlayer(null);
+            socket.emit("return-to-room", { roomCode });
+          }, 5000);
+        }
       }, 3000);
       
     });
