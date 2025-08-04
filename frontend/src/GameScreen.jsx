@@ -134,9 +134,9 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
         if (previousPlayerState && previousPlayerState.hand.length === 0) {
           console.log("Previous player has no cards - ending game");
           setNoCardsLeft(previousPlayer);
-          setShowVictoryScreen(true);
           setVictoryPlayer(previousPlayer);
           setEndBluff(true); // Mark that bluff has ended
+          // Show victory screen after timeout
         } else {
           console.log("Previous player still has cards - continuing game");
           setNoCardsLeft(null);
@@ -166,9 +166,9 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
         if (bluffCallerState && bluffCallerState.hand.length === 0) {
           console.log("Bluff caller has no cards - ending game");
           setNoCardsLeft(selectingPlayer);
-          setShowVictoryScreen(true);
           setVictoryPlayer(selectingPlayer);
           setEndBluff(true); // Mark that bluff has ended
+          // Show victory screen after timeout
         } else {
           console.log("Bluff caller still has cards - continuing game");
           setNoCardsLeft(null);
@@ -253,6 +253,7 @@ useEffect(() => {
   
 
   useEffect(() => {
+    // Show victory screen when timer runs out (no bluff called)
     if (timeLeft === 0 && noCardsLeft && !endBluff && timerStartedRef.current) {
       setShowBluffScreen(false);
       setShowVictoryScreen(true);
@@ -276,7 +277,30 @@ useEffect(() => {
         socket.emit("return-to-room", { roomCode });
       }, 5000);
     }
-  }, [timeLeft, noCardsLeft, roomCode, socket, endBluff]);
+    
+    // Show victory screen when last bluff is incorrect (someone has no cards and bluff call is wrong)
+    if (victoryPlayer && !showVictoryScreen && endBluff) {
+      setShowVictoryScreen(true);
+      console.log(victoryPlayer + " wins the game after incorrect bluff!");
+      
+      // Send victory message
+      socket.emit("send-message", {
+        roomCode,
+        playerName: "System",
+        message: `${victoryPlayer} wins the game! The bluff call was incorrect!`,
+        system: true,
+        timer: false
+      });
+      
+      // Hide victory screen after 5 seconds and return to room
+      setTimeout(() => {
+        setShowVictoryScreen(false);
+        setVictoryPlayer(null);
+        // Emit event to return to room screen
+        socket.emit("return-to-room", { roomCode });
+      }, 5000);
+    }
+  }, [timeLeft, noCardsLeft, roomCode, socket, endBluff, victoryPlayer, showVictoryScreen]);
   
   // Handle victory screen timeout when game ends
   useEffect(() => {
