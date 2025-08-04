@@ -199,9 +199,14 @@ io.on("connection", (socket) => {
     if (!rooms[roomCode]) {
       rooms[roomCode] = { players: [], centerStack: [], currentTurnPlayer: null };
     }
-    io.to(roomCode).emit("player-joined", { roomCode, playerName });
-    // rooms[roomCode].players.push(playerName);
+    // Add player to the room
+    if (!rooms[roomCode].players.includes(playerName)) {
+      rooms[roomCode].players.push(playerName);
+    }
     players[playerName] = roomCode;
+    
+    // Emit updated players list to all players in the room
+    io.to(roomCode).emit("player-joined", { roomCode, playerName, players: rooms[roomCode].players });
 
     console.log("Player joined room:", roomCode, "Player:", playerName); // Log player joining
     console.log("Current state of room:", rooms[roomCode]);
@@ -309,6 +314,11 @@ io.on("connection", (socket) => {
   });
 
   socket.on("bluff-card-select", ({ roomCode, newGameState, bluffCall, previousPlayer, oldCenterStack, card, playerName }) => {
+    console.log("=== BLUFF CARD SELECT EVENT RECEIVED ===");
+    console.log("Room:", roomCode);
+    console.log("Player:", playerName);
+    console.log("Card:", card);
+    console.log("Bluff call:", bluffCall);
     const gameState = getGameState(roomCode);
 
     if (!bluffCall) {
@@ -342,6 +352,7 @@ io.on("connection", (socket) => {
       console.log(oldCenterStack);
       updateGameState(roomCode, fixedGameState);
 
+      console.log(`Emitting bluff-card-selected to room ${roomCode} for all players`);
       io.to(roomCode).emit("bluff-card-selected", {newGameState: fixedGameState, bluffCall, previousPlayer, oldCenterStack, card, selectingPlayer: playerName});
     } else {
       const updatedPlayers = gameState.players.map(p => {
@@ -378,6 +389,7 @@ io.on("connection", (socket) => {
       console.log(gameState.centerStack);
       updateGameState(roomCode, fixedGameState);
 
+      console.log(`Emitting bluff-card-selected to room ${roomCode} for all players`);
       io.to(roomCode).emit("bluff-card-selected", {newGameState: fixedGameState, bluffCall, previousPlayer, oldCenterStack, card, selectingPlayer: playerName});
     }
   });
