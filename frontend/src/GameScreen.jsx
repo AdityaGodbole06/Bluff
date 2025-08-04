@@ -135,6 +135,7 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
           setNoCardsLeft(previousPlayer);
           setShowVictoryScreen(true);
           setVictoryPlayer(previousPlayer);
+          setEndBluff(true); // Mark that bluff has ended
           
           // Don't hide bluff screen immediately - let the card show for 3 seconds first
           // The timeout below will handle hiding the bluff screen
@@ -169,6 +170,7 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
           setNoCardsLeft(selectingPlayer);
           setShowVictoryScreen(true);
           setVictoryPlayer(selectingPlayer);
+          setEndBluff(true); // Mark that bluff has ended
           
           // Don't hide bluff screen immediately - let the card show for 3 seconds first
           // The timeout below will handle hiding the bluff screen
@@ -192,7 +194,8 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
           setTimeout(() => {
             setShowVictoryScreen(false);
             setVictoryPlayer(null);
-            socket.emit("return-to-room", { roomCode });
+            // Don't emit return-to-room immediately - let the victory screen show
+            // The game will naturally end when the timer runs out
           }, 5000);
         }
       }, 3000);
@@ -282,7 +285,7 @@ useEffect(() => {
         socket.emit("return-to-room", { roomCode });
       }, 5000);
     }
-  }, [timeLeft, noCardsLeft, roomCode, socket]);
+  }, [timeLeft, noCardsLeft, roomCode, socket, endBluff]);
   
 
   const handleBluff = () => {
