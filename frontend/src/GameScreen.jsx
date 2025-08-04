@@ -108,6 +108,7 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
       console.log("Bluff call result:", bluffCall);
       console.log("Previous player:", previousPlayer);
       console.log("Old center stack:", oldCenterStack);
+      console.log("Is this the last bluff call?", newGameState.players.some(p => p.hand.length === 0));
       
       // Set the selected card for all players to see
       setSelectedBluffCard(card);
