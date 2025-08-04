@@ -19,7 +19,6 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
   const [noCardsLeft, setNoCardsLeft] = useState(null);
   const [timer, setTimer] = useState(null);
   const [timeLeft, setTimeLeft] = useState(10);
-  const [timerStarted, setTimerStarted] = useState(false);
   const [endBluff, setEndBluff] = useState(false);
   const [isBluffCorrect, setIsBluffCorrect] = useState(null);
 
@@ -202,7 +201,6 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
       setShowVictoryScreen(false);
       setVictoryPlayer(null);
       setNoCardsLeft(null);
-      setTimerStarted(false);
       setEndBluff(false);
       setIsBluffCorrect(null);
     });
@@ -214,9 +212,8 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
 useEffect(() => {
   let interval;
 
-  if (noCardsLeft !== null && !endBluff && !timerStarted) {
+  if (noCardsLeft !== null && !endBluff) {
     setTimeLeft(10);
-    setTimerStarted(true);
     interval = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
@@ -232,7 +229,7 @@ useEffect(() => {
   }
 
   return () => clearInterval(interval);
-}, [noCardsLeft, endBluff, timerStarted]);
+}, [noCardsLeft, endBluff]);
 
 
   useEffect(() => {
@@ -251,7 +248,7 @@ useEffect(() => {
   
 
   useEffect(() => {
-    if (timeLeft === 0 && noCardsLeft && !endBluff && timerStarted) {
+    if (timeLeft === 0 && noCardsLeft && !endBluff) {
       setShowBluffScreen(false);
       setShowVictoryScreen(true);
       setVictoryPlayer(noCardsLeft);
@@ -274,7 +271,7 @@ useEffect(() => {
         socket.emit("return-to-room", { roomCode });
       }, 5000);
     }
-  }, [timeLeft, noCardsLeft, roomCode, socket, endBluff, timerStarted]);
+  }, [timeLeft, noCardsLeft, roomCode, socket, endBluff]);
   
   // Handle victory screen timeout when game ends
   useEffect(() => {
@@ -300,7 +297,6 @@ useEffect(() => {
       }
       // Also clear the timeLeft to prevent timer conflicts
       setTimeLeft(0);
-      setTimerStarted(false);
   
   
       const placedCards = previousTurn.cardsPlaced; 
