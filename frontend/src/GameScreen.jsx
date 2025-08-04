@@ -101,13 +101,14 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
     });
 
     socket.on("bluff-card-selected", ({newGameState, bluffCall, previousPlayer, oldCenterStack, card, selectingPlayer}) => {
-      console.log("=== BLUFF CARD SELECTED EVENT ===");
-      console.log("Event received by player:", playerName);
-      console.log("Card selected by:", selectingPlayer);
-      console.log("Selected card:", card);
-      console.log("Bluff call result:", bluffCall);
-      console.log("Previous player:", previousPlayer);
-      console.log("Old center stack:", oldCenterStack);
+      try {
+        console.log("=== BLUFF CARD SELECTED EVENT ===");
+        console.log("Event received by player:", playerName);
+        console.log("Card selected by:", selectingPlayer);
+        console.log("Selected card:", card);
+        console.log("Bluff call result:", bluffCall);
+        console.log("Previous player:", previousPlayer);
+        console.log("Old center stack:", oldCenterStack);
       
       // Set the selected card for all players to see
       setSelectedBluffCard(card);
@@ -177,16 +178,17 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
       
       // Hide bluff screen for all players after selection
       setTimeout(() => {
+        console.log("Timeout triggered - hiding bluff screen");
         setShowBluffScreen(false);
         setWinner(null);
         setSelectedBluffCard(null);
-        // Only reset endBluff if the game is not ending
-        if (!noCardsLeft) {
-          setEndBluff(false);
-        }
         setIsBluffCorrect(null);
+        console.log("Bluff screen hidden successfully");
       }, 3000);
       
+      } catch (error) {
+        console.error("Error in bluff-card-selected handler:", error);
+      }
     });
     
 
