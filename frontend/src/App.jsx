@@ -74,7 +74,7 @@ export default function App() {
   };
 
   const fetchPlayers = async () => {
-    if (roomCode) {
+    if (roomCode && !gameStarted) { // Only fetch players if game hasn't started
       try {
         const response = await axios.get(`${API_URL}/players/${roomCode}`, {
           timeout: 3000 // 3 second timeout
@@ -89,11 +89,11 @@ export default function App() {
   };
 
   useEffect(() => {
-    if (roomCode) {
+    if (roomCode && !gameStarted) {
       const interval = setInterval(fetchPlayers, 5000); // Fetch players every 5 seconds
       return () => clearInterval(interval);
     }
-  }, [roomCode]);
+  }, [roomCode, gameStarted]);
   
   useEffect(() => {
     const newSocket = io.connect(API_URL);
@@ -123,6 +123,15 @@ export default function App() {
 
     newSocket.on("game-ended", ({ roomCode }) => {
       console.log("Game ended, returning to room");
+      setGameStarted(false);
+      setPlayerCards([]);
+      setCenterCard(null);
+      setCenterStack([]);
+      setCurrentTurnPlayer([]);
+    });
+
+    newSocket.on("return-to-room", ({ roomCode }) => {
+      console.log("Returning to room");
       setGameStarted(false);
       setPlayerCards([]);
       setCenterCard(null);
