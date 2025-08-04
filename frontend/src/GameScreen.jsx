@@ -32,6 +32,7 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
 
 
   const messageBoxRef = useRef(null);
+  const timerStartedRef = useRef(false);
 
   useEffect(() => {
     // Auto-scroll to the bottom whenever messages are updated
@@ -203,6 +204,7 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
       setNoCardsLeft(null);
       setEndBluff(false);
       setIsBluffCorrect(null);
+      timerStartedRef.current = false;
     });
     
   }, [socket]);
@@ -212,7 +214,8 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
 useEffect(() => {
   let interval;
 
-  if (noCardsLeft !== null && !endBluff) {
+  if (noCardsLeft !== null && !endBluff && !timerStartedRef.current) {
+    timerStartedRef.current = true;
     setTimeLeft(10);
     interval = setInterval(() => {
       setTimeLeft((prev) => {
@@ -297,6 +300,7 @@ useEffect(() => {
       }
       // Also clear the timeLeft to prevent timer conflicts
       setTimeLeft(0);
+      timerStartedRef.current = false;
   
   
       const placedCards = previousTurn.cardsPlaced; 
