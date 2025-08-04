@@ -52,7 +52,7 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
       console.log(newGameState);
       console.log(newGameState.players);
       const thisPlayer = newGameState.players.find(p => p.name === playerName);
-      if (noCards && name === playerName) {
+      if (noCards) {
         console.log("SET NOCARDSLEFT TO PLAYER NAME");
         setNoCardsLeft(name);
         console.log(name);
@@ -304,6 +304,7 @@ useEffect(() => {
       setTimeLeft(0);
       timerStartedRef.current = false;
       setEndBluff(true); // Mark that bluff has started
+      setNoCardsLeft(null); // Clear the noCardsLeft state to stop timer
   
   
       const placedCards = previousTurn.cardsPlaced; 
