@@ -104,10 +104,8 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
       console.log("Card selected by:", selectingPlayer);
       console.log("Current player:", playerName);
       
-      // Only set the selected card for the player who made the selection
-      if (selectingPlayer === playerName) {
-        setSelectedBluffCard(card);
-      }
+      // Set the selected card for all players to see
+      setSelectedBluffCard(card);
       
       const thisPlayer = newGameState.players.find(p => p.name === playerName);
       if (thisPlayer) {
