@@ -52,7 +52,7 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
       console.log(newGameState);
       console.log(newGameState.players);
       const thisPlayer = newGameState.players.find(p => p.name === playerName);
-      if (noCards) {
+      if (noCards && name === playerName) {
         console.log("SET NOCARDSLEFT TO PLAYER NAME");
         setNoCardsLeft(name);
         console.log(name);
