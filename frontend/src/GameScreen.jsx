@@ -52,7 +52,7 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
       console.log(newGameState);
       console.log(newGameState.players);
       const thisPlayer = newGameState.players.find(p => p.name === playerName);
-      if (noCards && name === playerName) {
+      if (noCards) {
         console.log("SET NOCARDSLEFT TO PLAYER NAME");
         setNoCardsLeft(name);
         console.log(name);
@@ -280,25 +280,28 @@ useEffect(() => {
     
     // Show victory screen when last bluff is incorrect (someone has no cards and bluff call is wrong)
     if (victoryPlayer && !showVictoryScreen && endBluff) {
-      setShowVictoryScreen(true);
-      console.log(victoryPlayer + " wins the game after incorrect bluff!");
-      
-      // Send victory message
-      socket.emit("send-message", {
-        roomCode,
-        playerName: "System",
-        message: `${victoryPlayer} wins the game! The bluff call was incorrect!`,
-        system: true,
-        timer: false
-      });
-      
-      // Hide victory screen after 5 seconds and return to room
+      // Add a delay before showing victory screen
       setTimeout(() => {
-        setShowVictoryScreen(false);
-        setVictoryPlayer(null);
-        // Emit event to return to room screen
-        socket.emit("return-to-room", { roomCode });
-      }, 5000);
+        setShowVictoryScreen(true);
+        console.log(victoryPlayer + " wins the game after incorrect bluff!");
+        
+        // Send victory message
+        socket.emit("send-message", {
+          roomCode,
+          playerName: "System",
+          message: `${victoryPlayer} wins the game! The bluff call was incorrect!`,
+          system: true,
+          timer: false
+        });
+        
+        // Hide victory screen after 5 seconds and return to room
+        setTimeout(() => {
+          setShowVictoryScreen(false);
+          setVictoryPlayer(null);
+          // Emit event to return to room screen
+          socket.emit("return-to-room", { roomCode });
+        }, 5000);
+      }, 3000); // 3 second delay before showing victory screen
     }
   }, [timeLeft, noCardsLeft, roomCode, socket, endBluff, victoryPlayer, showVictoryScreen]);
   
