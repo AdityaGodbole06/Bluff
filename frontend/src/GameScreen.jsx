@@ -124,18 +124,6 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
         setCurrentCenterCard(newGameState.centerCard);
         setNoCardsLeft(null);
         setEndBluff(false);
-        
-        // Show brief result message
-        setWinner(previousPlayer);
-        setShowVictoryScreen(true);
-        setVictoryPlayer(previousPlayer);
-        
-        // Hide victory screen after 3 seconds and continue game
-        setTimeout(() => {
-          setShowVictoryScreen(false);
-          setVictoryPlayer(null);
-          setWinner(null);
-        }, 3000);
       } else {
         // Correct bluff call - bluff caller gets the cards
         console.log("THIS IS THE NEW GAME STATE AFTER BLUFF CALL")
@@ -155,18 +143,6 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
         setCurrentCenterCard(newGameState.centerCard);
         setNoCardsLeft(null);
         setEndBluff(false);
-        
-        // Show brief result message
-        setWinner(bluffCaller);
-        setShowVictoryScreen(true);
-        setVictoryPlayer(bluffCaller);
-        
-        // Hide victory screen after 3 seconds and continue game
-        setTimeout(() => {
-          setShowVictoryScreen(false);
-          setVictoryPlayer(null);
-          setWinner(null);
-        }, 3000);
       }
       
       // Hide bluff screen for all players after selection
