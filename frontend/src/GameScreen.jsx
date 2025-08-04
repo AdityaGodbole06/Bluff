@@ -136,9 +136,6 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
           setShowVictoryScreen(true);
           setVictoryPlayer(previousPlayer);
           setEndBluff(true); // Mark that bluff has ended
-          
-          // Don't hide bluff screen immediately - let the card show for 3 seconds first
-          // The timeout below will handle hiding the bluff screen
         } else {
           console.log("Previous player still has cards - continuing game");
           setNoCardsLeft(null);
@@ -171,9 +168,6 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
           setShowVictoryScreen(true);
           setVictoryPlayer(selectingPlayer);
           setEndBluff(true); // Mark that bluff has ended
-          
-          // Don't hide bluff screen immediately - let the card show for 3 seconds first
-          // The timeout below will handle hiding the bluff screen
         } else {
           console.log("Bluff caller still has cards - continuing game");
           setNoCardsLeft(null);
@@ -187,17 +181,6 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
         setSelectedBluffCard(null);
         setEndBluff(false);
         setIsBluffCorrect(null);
-        
-        // If game should end, show victory screen and return to room
-        if (noCardsLeft) {
-          console.log("Game ending after bluff resolution");
-          setTimeout(() => {
-            setShowVictoryScreen(false);
-            setVictoryPlayer(null);
-            // Don't emit return-to-room immediately - let the victory screen show
-            // The game will naturally end when the timer runs out
-          }, 5000);
-        }
       }, 3000);
       
     });
@@ -286,6 +269,19 @@ useEffect(() => {
       }, 5000);
     }
   }, [timeLeft, noCardsLeft, roomCode, socket, endBluff]);
+  
+  // Handle victory screen timeout when game ends
+  useEffect(() => {
+    if (showVictoryScreen && victoryPlayer) {
+      const timer = setTimeout(() => {
+        setShowVictoryScreen(false);
+        setVictoryPlayer(null);
+        socket.emit("return-to-room", { roomCode });
+      }, 5000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [showVictoryScreen, victoryPlayer, roomCode, socket]);
   
 
   const handleBluff = () => {
