@@ -216,8 +216,7 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
 useEffect(() => {
   let interval;
 
-  if (noCardsLeft !== null && !endBluff && !timerStartedRef.current) {
-    timerStartedRef.current = true;
+  if (noCardsLeft !== null && !endBluff) {
     setTimeLeft(10);
     interval = setInterval(() => {
       setTimeLeft((prev) => {
