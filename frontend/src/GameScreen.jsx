@@ -120,8 +120,24 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
         // Incorrect bluff call - previous player gets the cards
         setGameState(newGameState);
         setCurrentCenterCard(newGameState.centerCard);
-        setNoCardsLeft(null);
         setEndBluff(false);
+        
+        // Check if the previous player now has no cards (game should end)
+        const previousPlayerState = newGameState.players.find(p => p.name === previousPlayer);
+        if (previousPlayerState && previousPlayerState.hand.length === 0) {
+          setNoCardsLeft(previousPlayer);
+          setShowVictoryScreen(true);
+          setVictoryPlayer(previousPlayer);
+          
+          // Hide victory screen after 5 seconds and return to room
+          setTimeout(() => {
+            setShowVictoryScreen(false);
+            setVictoryPlayer(null);
+            socket.emit("return-to-room", { roomCode });
+          }, 5000);
+        } else {
+          setNoCardsLeft(null);
+        }
       } else {
         // Correct bluff call - bluff caller gets the cards
         console.log("THIS IS THE NEW GAME STATE AFTER BLUFF CALL")
@@ -139,8 +155,24 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
 
         setGameState(newGameState);
         setCurrentCenterCard(newGameState.centerCard);
-        setNoCardsLeft(null);
         setEndBluff(false);
+        
+        // Check if the bluff caller now has no cards (game should end)
+        const bluffCallerState = newGameState.players.find(p => p.name === selectingPlayer);
+        if (bluffCallerState && bluffCallerState.hand.length === 0) {
+          setNoCardsLeft(selectingPlayer);
+          setShowVictoryScreen(true);
+          setVictoryPlayer(selectingPlayer);
+          
+          // Hide victory screen after 5 seconds and return to room
+          setTimeout(() => {
+            setShowVictoryScreen(false);
+            setVictoryPlayer(null);
+            socket.emit("return-to-room", { roomCode });
+          }, 5000);
+        } else {
+          setNoCardsLeft(null);
+        }
       }
       
       // Hide bluff screen for all players after selection
