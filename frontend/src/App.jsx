@@ -108,8 +108,10 @@ export default function App() {
       setGameStarted(true);
     });
 
-    newSocket.on("player-joined", ({ roomCode, playerName }) => {
+    newSocket.on("player-joined", ({ roomCode, playerName, players }) => {
       console.log("HELLO " + playerName + " to " + roomCode);
+      console.log("Updated players list:", players);
+      setPlayers(players);
     });
 
     newSocket.on("player-left", ({ roomCode, playerName, remainingPlayers, newLeader }) => {
