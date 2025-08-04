@@ -179,7 +179,12 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
         setShowBluffScreen(false);
         setWinner(null);
         setSelectedBluffCard(null);
-        setEndBluff(false);
+        // Only reset endBluff if the game is not ending
+        const shouldEndGame = (previousPlayerState && previousPlayerState.hand.length === 0) || 
+                             (bluffCallerState && bluffCallerState.hand.length === 0);
+        if (!shouldEndGame) {
+          setEndBluff(false);
+        }
         setIsBluffCorrect(null);
       }, 3000);
       
@@ -292,6 +297,8 @@ useEffect(() => {
         setTimer(null);
         socket.emit("clear-timer", {roomCode});
       }
+      // Also clear the timeLeft to prevent timer conflicts
+      setTimeLeft(0);
   
   
       const placedCards = previousTurn.cardsPlaced; 
