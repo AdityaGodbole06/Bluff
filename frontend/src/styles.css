@@ -1189,6 +1189,66 @@ input::placeholder {
 }
 }
 
+.defeat-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(20, 20, 20, 0.95));
+  backdrop-filter: blur(10px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  text-align: center;
+  font-family: 'Poppins', sans-serif;
+}
+
+.defeat-content {
+  background: linear-gradient(145deg, rgba(255, 107, 107, 0.1), rgba(255, 142, 142, 0.1));
+  border: 2px solid rgba(255, 107, 107, 0.3);
+  border-radius: 20px;
+  padding: 3rem 4rem;
+  box-shadow: 0 0 30px rgba(255, 107, 107, 0.3);
+  animation: defeat-glow 2s ease-in-out infinite;
+}
+
+.defeat-title {
+  font-size: 3rem;
+  font-weight: 800;
+  margin-bottom: 1rem;
+  background: linear-gradient(45deg, #ff6b6b, #ffd93d);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 0 20px rgba(255, 107, 107, 0.5);
+}
+
+.defeat-message {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #ffffff;
+}
+
+.defeat-timer {
+  font-size: 1rem;
+  color: #ff6b6b;
+  font-weight: 500;
+  animation: pulse-timer 1s ease-in-out infinite;
+}
+
+@keyframes defeat-glow {
+0%, 100% {
+  box-shadow: 0 0 30px rgba(255, 107, 107, 0.3);
+}
+50% {
+  box-shadow: 0 0 50px rgba(255, 107, 107, 0.6);
+}
+}
+
 .card-reveal-screen {
   position: fixed;
   top: 0;

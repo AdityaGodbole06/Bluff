@@ -989,15 +989,15 @@ useEffect(() => {
         </div>
       )}
       {showVictoryScreen && (
-        <div className="victory-screen">
-          <div className="victory-content">
-            <h1 className="victory-title">
+        <div className={playerName === victoryPlayer ? "victory-screen" : "defeat-screen"}>
+          <div className={playerName === victoryPlayer ? "victory-content" : "defeat-content"}>
+            <h1 className={playerName === victoryPlayer ? "victory-title" : "defeat-title"}>
               {playerName === victoryPlayer ? "🎉 Victory! 🎉" : "😔 Defeat! 😔"}
             </h1>
-            <p className="victory-message">
+            <p className={playerName === victoryPlayer ? "victory-message" : "defeat-message"}>
               {victoryPlayer} wins the game!
             </p>
-            <div className="victory-timer">
+            <div className={playerName === victoryPlayer ? "victory-timer" : "defeat-timer"}>
               Returning to room in 3 seconds...
             </div>
             <button 
