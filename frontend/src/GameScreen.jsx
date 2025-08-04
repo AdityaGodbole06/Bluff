@@ -251,7 +251,7 @@ useEffect(() => {
   
 
   useEffect(() => {
-    if (timeLeft === 0 && noCardsLeft && !endBluff) {
+    if (timeLeft === 0 && noCardsLeft && !endBluff && timerStarted) {
       setShowBluffScreen(false);
       setShowVictoryScreen(true);
       setVictoryPlayer(noCardsLeft);
@@ -274,7 +274,7 @@ useEffect(() => {
         socket.emit("return-to-room", { roomCode });
       }, 5000);
     }
-  }, [timeLeft, noCardsLeft, roomCode, socket, endBluff]);
+  }, [timeLeft, noCardsLeft, roomCode, socket, endBluff, timerStarted]);
   
   // Handle victory screen timeout when game ends
   useEffect(() => {
