@@ -100,12 +100,17 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
     });
 
     socket.on("bluff-card-selected", ({newGameState, bluffCall, previousPlayer, oldCenterStack, card, selectingPlayer}) => {
-      console.log(oldCenterStack);
+      console.log("=== BLUFF CARD SELECTED EVENT ===");
+      console.log("Event received by player:", playerName);
       console.log("Card selected by:", selectingPlayer);
-      console.log("Current player:", playerName);
+      console.log("Selected card:", card);
+      console.log("Bluff call result:", bluffCall);
+      console.log("Previous player:", previousPlayer);
+      console.log("Old center stack:", oldCenterStack);
       
       // Set the selected card for all players to see
       setSelectedBluffCard(card);
+      console.log(`Player ${playerName} set selectedBluffCard to:`, card);
       
       const thisPlayer = newGameState.players.find(p => p.name === playerName);
       if (thisPlayer) {
@@ -124,7 +129,9 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
         
         // Check if the previous player now has no cards (game should end)
         const previousPlayerState = newGameState.players.find(p => p.name === previousPlayer);
+        console.log("Previous player state:", previousPlayerState);
         if (previousPlayerState && previousPlayerState.hand.length === 0) {
+          console.log("Previous player has no cards - ending game");
           setNoCardsLeft(previousPlayer);
           setShowVictoryScreen(true);
           setVictoryPlayer(previousPlayer);
@@ -136,6 +143,7 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
             socket.emit("return-to-room", { roomCode });
           }, 5000);
         } else {
+          console.log("Previous player still has cards - continuing game");
           setNoCardsLeft(null);
         }
       } else {
@@ -159,7 +167,9 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
         
         // Check if the bluff caller now has no cards (game should end)
         const bluffCallerState = newGameState.players.find(p => p.name === selectingPlayer);
+        console.log("Bluff caller state:", bluffCallerState);
         if (bluffCallerState && bluffCallerState.hand.length === 0) {
+          console.log("Bluff caller has no cards - ending game");
           setNoCardsLeft(selectingPlayer);
           setShowVictoryScreen(true);
           setVictoryPlayer(selectingPlayer);
@@ -171,6 +181,7 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
             socket.emit("return-to-room", { roomCode });
           }, 5000);
         } else {
+          console.log("Bluff caller still has cards - continuing game");
           setNoCardsLeft(null);
         }
       }
@@ -180,10 +191,9 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
         setShowBluffScreen(false);
         setWinner(null);
         setSelectedBluffCard(null);
-        setNoCardsLeft(null);
         setEndBluff(false);
         setIsBluffCorrect(null);
-        // Don't hide victory screen here - let it show for 5 seconds
+        // Don't clear noCardsLeft here - let the end-game logic handle it
       }, 3000);
       
     });
