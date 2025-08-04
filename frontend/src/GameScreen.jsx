@@ -18,7 +18,8 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
   const [winner, setWinner] = useState(null);
   const [noCardsLeft, setNoCardsLeft] = useState(null);
   const [timer, setTimer] = useState(null);
-  const [timeLeft, setTimeLeft] = useState(null);
+  const [timeLeft, setTimeLeft] = useState(10);
+  const [timerStarted, setTimerStarted] = useState(false);
   const [endBluff, setEndBluff] = useState(false);
   const [isBluffCorrect, setIsBluffCorrect] = useState(null);
 
@@ -201,6 +202,7 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
       setShowVictoryScreen(false);
       setVictoryPlayer(null);
       setNoCardsLeft(null);
+      setTimerStarted(false);
       setEndBluff(false);
       setIsBluffCorrect(null);
     });
@@ -212,8 +214,9 @@ export default function GameScreen({ players, playerCards, centerCard, centerSta
 useEffect(() => {
   let interval;
 
-  if (noCardsLeft !== null && !endBluff && timeLeft === null) {
+  if (noCardsLeft !== null && !endBluff && !timerStarted) {
     setTimeLeft(10);
+    setTimerStarted(true);
     interval = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
@@ -229,7 +232,7 @@ useEffect(() => {
   }
 
   return () => clearInterval(interval);
-}, [noCardsLeft, endBluff, timeLeft]);
+}, [noCardsLeft, endBluff, timerStarted]);
 
 
   useEffect(() => {
@@ -297,6 +300,7 @@ useEffect(() => {
       }
       // Also clear the timeLeft to prevent timer conflicts
       setTimeLeft(0);
+      setTimerStarted(false);
   
   
       const placedCards = previousTurn.cardsPlaced; 
