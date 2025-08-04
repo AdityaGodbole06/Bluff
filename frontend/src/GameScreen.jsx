@@ -407,48 +407,42 @@ useEffect(() => {
     const oldCenterStack = gameState.centerStack;
     const previousPlayer = previousTurn.playerName;
     if (getCardValue(card) === getCardValue(previousTurn.numberSelected)) {
-      if (endBluff) {
-        console.log(noCardsLeft + " wins the game!!!");
-      } else {
-        console.log("You guessed INCORRECT");
-        const updatedPlayerHand = [...playerHand, ...gameState.centerStack];
-        setPlayerHand(updatedPlayerHand);
-        console.log("PLEASE DONT SHOW")
-        console.log(playerHand);
+      console.log("You guessed INCORRECT");
+      const updatedPlayerHand = [...playerHand, ...gameState.centerStack];
+      setPlayerHand(updatedPlayerHand);
+      console.log("PLEASE DONT SHOW")
+      console.log(playerHand);
 
-        socket.emit("send-message", {
-          roomCode,
-          playerName: "System",
-          message: `${playerName} guessed incorrectly!`,
-          system: true  // Flag it as a system message
-        });
+      socket.emit("send-message", {
+        roomCode,
+        playerName: "System",
+        message: `${playerName} guessed incorrectly!`,
+        system: true  // Flag it as a system message
+      });
 
-        const updatedPlayers = gameState.players.map(p => {
-          if (p.name === playerName) {
-            return {
-              ...p,
-              hand: [...p.hand, ...gameState.centerStack]
-            };
-          }
-          return p;
-        });
-        
-        
-  
-        bluffCall = false;
-        setIsBluffCorrect(false);
-        // Reset the center stack
-        const newGameState = {
-          ...gameState,
-          players: updatedPlayers,
-          centerCard: "",
-          centerStack: [],
-          currentTurnPlayer: previousTurn.playerName
-        };
-        setCurrentCenterCard("");
-        setGameState(newGameState);
-        socket.emit("bluff-card-select", { roomCode, newGameState, bluffCall, previousPlayer, oldCenterStack, card, playerName });
-      }
+      const updatedPlayers = gameState.players.map(p => {
+        if (p.name === playerName) {
+          return {
+            ...p,
+            hand: [...p.hand, ...gameState.centerStack]
+          };
+        }
+        return p;
+      });
+      
+      bluffCall = false;
+      setIsBluffCorrect(false);
+      // Reset the center stack
+      const newGameState = {
+        ...gameState,
+        players: updatedPlayers,
+        centerCard: "",
+        centerStack: [],
+        currentTurnPlayer: previousTurn.playerName
+      };
+      setCurrentCenterCard("");
+      setGameState(newGameState);
+      socket.emit("bluff-card-select", { roomCode, newGameState, bluffCall, previousPlayer, oldCenterStack, card, playerName });
     } else {
       const updatedPlayers = gameState.players.map(p => {
         if (p.name === previousPlayer) {
