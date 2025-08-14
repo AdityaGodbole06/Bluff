@@ -15,6 +15,10 @@ const roomSchema = new mongoose.Schema({
     type: String,
     required: true
   }],
+  isPrivate: {
+    type: Boolean,
+    default: false
+  },
   gameState: {
     players: [{
       name: String,

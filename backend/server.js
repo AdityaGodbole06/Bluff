@@ -71,6 +71,23 @@ app.get('/health', (req, res) => {
   });
 });
 
+const games = {};
+
+// Function to get the game state
+function getGameState(roomCode) {
+  return games[roomCode];
+}
+
+// Function to update the game state
+function updateGameState(roomCode, gameState) {
+  games[roomCode] = gameState;
+}
+
+const rooms = {};
+const playerSocketIdMap = {}; // This will store the mapping of player names to socket IDs
+const turns = {};
+const players = {};
+
 // Super simple endpoint for Railway healthcheck
 app.get('/ping', (req, res) => {
   res.status(200).send('pong');
@@ -96,35 +113,19 @@ app.get('/players/:roomCode', (req, res) => {
   }
 });
 
-const games = {};
-
-// Function to get the game state
-function getGameState(roomCode) {
-  return games[roomCode];
-}
-
-// Function to update the game state
-function updateGameState(roomCode, gameState) {
-  games[roomCode] = gameState;
-}
-
-const rooms = {};
-const playerSocketIdMap = {}; // This will store the mapping of player names to socket IDs
-const turns = {};
-const players = {};
-
 app.post("/create-room", async (req, res) => {
   try {
-    const { playerName } = req.body;
+    const { playerName, isPrivate = false } = req.body;
     const roomCode = generateRoomCode();
     
     // Create room in database
-    await RoomService.createRoom(roomCode, playerName);
+    await RoomService.createRoom(roomCode, playerName, isPrivate);
     
     // Keep in-memory for backward compatibility
     rooms[roomCode] = {
       leader: playerName,
-      players: [playerName]
+      players: [playerName],
+      isPrivate
     };
     turns[roomCode] = 0;
     
@@ -132,6 +133,17 @@ app.post("/create-room", async (req, res) => {
   } catch (error) {
     console.error("Error creating room:", error);
     res.status(500).json({ error: "Failed to create room" });
+  }
+});
+
+// Get public rooms
+app.get("/public-rooms", async (req, res) => {
+  try {
+    const publicRooms = await RoomService.getPublicRooms();
+    res.status(200).json({ rooms: publicRooms });
+  } catch (error) {
+    console.error("Error fetching public rooms:", error);
+    res.status(500).json({ error: "Failed to fetch public rooms" });
   }
 });
 

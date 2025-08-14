@@ -2,15 +2,29 @@ const Room = require('./models/Room');
 
 class RoomService {
   // Create a new room
-  static async createRoom(roomCode, playerName) {
+  static async createRoom(roomCode, playerName, isPrivate = false) {
     try {
       const room = new Room({
         roomCode,
         leader: playerName,
-        players: [playerName]
+        players: [playerName],
+        isPrivate
       });
       await room.save();
       return room;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Get all public rooms
+  static async getPublicRooms() {
+    try {
+      const rooms = await Room.find({ 
+        isPrivate: false, 
+        isGameActive: false 
+      }).select('roomCode leader players createdAt');
+      return rooms;
     } catch (error) {
       throw error;
     }

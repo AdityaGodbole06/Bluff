@@ -23,6 +23,9 @@ export default function App() {
   const [centerCard, setCenterCard] = useState(null);
   const [socket, setSocket] = useState(null);
   const [joinError, setJoinError] = useState("");
+  const [isPrivate, setIsPrivate] = useState(false);
+  const [publicRooms, setPublicRooms] = useState([]);
+  const [showPublicRooms, setShowPublicRooms] = useState(false);
 
   const deck = [
     "Ace of Spades", "2 of Spades", "3 of Spades", "4 of Spades", "5 of Spades", "6 of Spades", "7 of Spades", "8 of Spades", "9 of Spades", "10 of Spades", "Jack of Spades", "Queen of Spades", "King of Spades",
@@ -35,7 +38,10 @@ export default function App() {
     event.preventDefault();
     try {
       if (playerName.trim()) {
-        const response = await axios.post(`${API_URL}/create-room`, { playerName });
+        const response = await axios.post(`${API_URL}/create-room`, { 
+          playerName, 
+          isPrivate 
+        });
         setRoomCode(response.data.roomCode);
         setIsLeader(true); // The player who creates the room is the leader
         socket.emit("join-room", { roomCode: response.data.roomCode, playerName });
@@ -73,6 +79,39 @@ export default function App() {
     }
   };
 
+  const handleJoinPublicRoom = async (roomCode) => {
+    try {
+      const response = await axios.post(`${API_URL}/join-room`, { playerName, roomCode });
+      if (response.data.success) {
+        setRoomCode(roomCode);
+        setJoinError(""); // Clear any previous error
+        socket.emit("join-room", { roomCode, playerName });
+        setShowPublicRooms(false);
+        console.log("Joined public room with code:", roomCode);
+      } else {
+        setJoinError(response.data.message || "Failed to join room.");
+      }
+    } catch (error) {
+      console.error("Error joining public room:", error);
+      let message = "Failed to join room. Please try again.";
+      if (error.response && error.response.data && error.response.data.message) {
+        message = error.response.data.message;
+      } else if (error.message) {
+        message = error.message;
+      }
+      setJoinError(message);
+    }
+  };
+
+  const fetchPublicRooms = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/public-rooms`);
+      setPublicRooms(response.data.rooms);
+    } catch (error) {
+      console.error("Error fetching public rooms:", error);
+    }
+  };
+
   const fetchPlayers = async () => {
     if (roomCode && !gameStarted) { // Only fetch players if game hasn't started
       try {
@@ -94,6 +133,14 @@ export default function App() {
       return () => clearInterval(interval);
     }
   }, [roomCode, gameStarted]);
+
+  useEffect(() => {
+    if (showPublicRooms) {
+      fetchPublicRooms();
+      const interval = setInterval(fetchPublicRooms, 10000); // Refresh every 10 seconds
+      return () => clearInterval(interval);
+    }
+  }, [showPublicRooms]);
   
   useEffect(() => {
     const newSocket = io.connect(API_URL);
@@ -186,6 +233,19 @@ export default function App() {
     socket.emit("start-game", { roomCode, playersCards, centerCard, currentPlayer, playerName });
   };
 
+  const formatTimeAgo = (createdAt) => {
+    const now = new Date();
+    const created = new Date(createdAt);
+    const diffInMinutes = Math.floor((now - created) / (1000 * 60));
+    
+    if (diffInMinutes < 1) return "Just now";
+    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    const diffInDays = Math.floor(diffInHours / 24);
+    return `${diffInDays}d ago`;
+  };
+
   try {
     return (
       <div>
@@ -214,11 +274,60 @@ export default function App() {
                       onChange={(e) => setPlayerName(e.target.value)}
                       className="input-field"
                     />
+                    
+                    <div className="privacy-options">
+                      <label className="privacy-label">
+                        <input
+                          type="checkbox"
+                          checked={isPrivate}
+                          onChange={(e) => setIsPrivate(e.target.checked)}
+                          className="privacy-checkbox"
+                        />
+                        Make room private
+                      </label>
+                    </div>
+
                     <div className="button-group">
                       <button type="submit" className="btn">Create Room</button>
                       <button type="button" className="btn" onClick={handleJoinRoom}>Join Room</button>
+                      <button 
+                        type="button" 
+                        className="btn public-rooms-btn" 
+                        onClick={() => setShowPublicRooms(!showPublicRooms)}
+                      >
+                        {showPublicRooms ? 'Hide' : 'Show'} Public Rooms
+                      </button>
                     </div>
                   </form>
+
+                  {showPublicRooms && (
+                    <div className="public-rooms-section">
+                      <h3>Public Rooms</h3>
+                      {publicRooms.length === 0 ? (
+                        <p className="no-rooms">No public rooms available</p>
+                      ) : (
+                        <div className="public-rooms-list">
+                          {publicRooms.map((room) => (
+                            <div key={room.roomCode} className="public-room-item">
+                              <div className="room-info">
+                                <span className="room-code-display">Room: {room.roomCode}</span>
+                                <span className="room-leader">Leader: {room.leader}</span>
+                                <span className="room-players">{room.players.length} players</span>
+                                <span className="room-created">{formatTimeAgo(room.createdAt)}</span>
+                              </div>
+                              <button 
+                                className="join-public-btn"
+                                onClick={() => handleJoinPublicRoom(room.roomCode)}
+                                disabled={room.players.length >= MAX_PLAYERS}
+                              >
+                                {room.players.length >= MAX_PLAYERS ? 'Full' : 'Join'}
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
