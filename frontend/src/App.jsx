@@ -26,6 +26,7 @@ export default function App() {
   const [isPrivate, setIsPrivate] = useState(false);
   const [publicRooms, setPublicRooms] = useState([]);
   const [showPublicRooms, setShowPublicRooms] = useState(false);
+  const [roomName, setRoomName] = useState("");
 
   const deck = [
     "Ace of Spades", "2 of Spades", "3 of Spades", "4 of Spades", "5 of Spades", "6 of Spades", "7 of Spades", "8 of Spades", "9 of Spades", "10 of Spades", "Jack of Spades", "Queen of Spades", "King of Spades",
@@ -40,7 +41,8 @@ export default function App() {
       if (playerName.trim()) {
         const response = await axios.post(`${API_URL}/create-room`, { 
           playerName, 
-          isPrivate 
+          isPrivate,
+          roomName: roomName.trim() || "New Room"
         });
         setRoomCode(response.data.roomCode);
         setIsLeader(true); // The player who creates the room is the leader
@@ -275,6 +277,14 @@ export default function App() {
                       className="input-field"
                     />
                     
+                    <input
+                      type="text"
+                      placeholder="Room name (optional)"
+                      value={roomName}
+                      onChange={(e) => setRoomName(e.target.value)}
+                      className="input-field"
+                    />
+                    
                     <div className="privacy-options">
                       <label className="privacy-label">
                         <input
@@ -310,7 +320,8 @@ export default function App() {
                           {publicRooms.map((room) => (
                             <div key={room.roomCode} className="public-room-item">
                               <div className="room-info">
-                                <span className="room-code-display">Room: {room.roomCode}</span>
+                                <span className="room-name-display">{room.roomName}</span>
+                                <span className="room-code-display">Code: {room.roomCode}</span>
                                 <span className="room-leader">Leader: {room.leader}</span>
                                 <span className="room-players">{room.players.length} players</span>
                                 <span className="room-created">{formatTimeAgo(room.createdAt)}</span>
@@ -352,6 +363,7 @@ export default function App() {
                 </button>
               </div>
               <h2 className="room-code">Room Code: {roomCode}</h2>
+              {roomName && <h3 className="room-name">Room Name: {roomName}</h3>}
               <h3 className="player-count">Players ({players.length}/{MAX_PLAYERS}):</h3>
               <ul className="player-list-start">
                 {players.map((player, index) => (

@@ -115,17 +115,18 @@ app.get('/players/:roomCode', (req, res) => {
 
 app.post("/create-room", async (req, res) => {
   try {
-    const { playerName, isPrivate = false } = req.body;
+    const { playerName, isPrivate = false, roomName } = req.body;
     const roomCode = generateRoomCode();
     
     // Create room in database
-    await RoomService.createRoom(roomCode, playerName, isPrivate);
+    await RoomService.createRoom(roomCode, playerName, isPrivate, roomName);
     
     // Keep in-memory for backward compatibility
     rooms[roomCode] = {
       leader: playerName,
       players: [playerName],
-      isPrivate
+      isPrivate,
+      roomName: roomName || `Room ${roomCode}`
     };
     turns[roomCode] = 0;
     

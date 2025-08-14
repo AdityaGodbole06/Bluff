@@ -236,10 +236,17 @@ input::placeholder {
   flex: 1;
 }
 
-.room-code-display {
+.room-name-display {
   color: #fff;
-  font-weight: 600;
-  font-size: 1.1rem;
+  font-weight: 700;
+  font-size: 1.2rem;
+  margin-bottom: 0.25rem;
+}
+
+.room-code-display {
+  color: #90cfff;
+  font-weight: 500;
+  font-size: 0.9rem;
 }
 
 .room-leader {
@@ -310,11 +317,17 @@ input::placeholder {
   animation: fadeInSlideUp 1s ease, pulse-border 6s ease-in-out infinite;
 }
 
-.room-code, .player-count {
+.room-code, .room-name, .player-count {
   color: #cdeaff;
   font-weight: 600;
   font-size: 1.5rem;
   margin-bottom: 1rem;
+}
+
+.room-name {
+  color: #fff;
+  font-size: 1.3rem;
+  margin-bottom: 0.5rem;
 }
 
 .player-list-start {

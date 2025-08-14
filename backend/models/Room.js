@@ -7,6 +7,13 @@ const roomSchema = new mongoose.Schema({
     unique: true,
     index: true
   },
+  roomName: {
+    type: String,
+    required: true,
+    default: function() {
+      return `Room ${this.roomCode}`;
+    }
+  },
   leader: {
     type: String,
     required: true

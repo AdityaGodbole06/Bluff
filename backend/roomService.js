@@ -2,13 +2,14 @@ const Room = require('./models/Room');
 
 class RoomService {
   // Create a new room
-  static async createRoom(roomCode, playerName, isPrivate = false) {
+  static async createRoom(roomCode, playerName, isPrivate = false, roomName = null) {
     try {
       const room = new Room({
         roomCode,
         leader: playerName,
         players: [playerName],
-        isPrivate
+        isPrivate,
+        roomName: roomName || `Room ${roomCode}`
       });
       await room.save();
       return room;
@@ -23,7 +24,7 @@ class RoomService {
       const rooms = await Room.find({ 
         isPrivate: false, 
         isGameActive: false 
-      }).select('roomCode leader players createdAt');
+      }).select('roomCode roomName leader players createdAt');
       return rooms;
     } catch (error) {
       throw error;
