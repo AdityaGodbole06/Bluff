@@ -289,6 +289,25 @@ input::placeholder {
   cursor: not-allowed;
 }
 
+.back-btn {
+  background: rgba(100, 100, 100, 0.2);
+  border: 1px solid rgba(100, 100, 100, 0.4);
+  color: #ccc;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  margin-top: 1rem;
+}
+
+.back-btn:hover {
+  background: rgba(100, 100, 100, 0.3);
+  border-color: rgba(100, 100, 100, 0.6);
+  color: #fff;
+  transform: translateX(-2px);
+}
+
 .btn {
   transition: all 0.2s ease-in-out;
 }

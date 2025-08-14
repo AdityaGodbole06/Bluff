@@ -27,6 +27,10 @@ export default function App() {
   const [publicRooms, setPublicRooms] = useState([]);
   const [showPublicRooms, setShowPublicRooms] = useState(false);
   const [roomName, setRoomName] = useState("");
+  
+  // New UI flow states
+  const [currentStep, setCurrentStep] = useState("name"); // "name", "create", "join"
+  const [joinMethod, setJoinMethod] = useState(""); // "code" or "public"
 
   const deck = [
     "Ace of Spades", "2 of Spades", "3 of Spades", "4 of Spades", "5 of Spades", "6 of Spades", "7 of Spades", "8 of Spades", "9 of Spades", "10 of Spades", "Jack of Spades", "Queen of Spades", "King of Spades",
@@ -137,12 +141,12 @@ export default function App() {
   }, [roomCode, gameStarted]);
 
   useEffect(() => {
-    if (showPublicRooms) {
+    if (currentStep === "join" && joinMethod === "public") {
       fetchPublicRooms();
       const interval = setInterval(fetchPublicRooms, 10000); // Refresh every 10 seconds
       return () => clearInterval(interval);
     }
-  }, [showPublicRooms]);
+  }, [currentStep, joinMethod]);
   
   useEffect(() => {
     const newSocket = io.connect(API_URL);
@@ -267,77 +271,164 @@ export default function App() {
                       {joinError}
                     </div>
                   )}
-                  <p className="subtitle">Enter your name to get started</p>
-                  <form className="new-player-form" onSubmit={handleCreateRoom}>
-                    <input
-                      type="text"
-                      placeholder="Your name"
-                      value={playerName}
-                      onChange={(e) => setPlayerName(e.target.value)}
-                      className="input-field"
-                    />
-                    
-                    <input
-                      type="text"
-                      placeholder="Room name (optional)"
-                      value={roomName}
-                      onChange={(e) => setRoomName(e.target.value)}
-                      className="input-field"
-                    />
-                    
-                    <div className="privacy-options">
-                      <label className="privacy-label">
+                  
+                  {currentStep === "name" && (
+                    <>
+                      <p className="subtitle">Enter your name to get started</p>
+                      <form className="new-player-form" onSubmit={(e) => {
+                        e.preventDefault();
+                        if (playerName.trim()) {
+                          setCurrentStep("choice");
+                        }
+                      }}>
                         <input
-                          type="checkbox"
-                          checked={isPrivate}
-                          onChange={(e) => setIsPrivate(e.target.checked)}
-                          className="privacy-checkbox"
+                          type="text"
+                          placeholder="Your name"
+                          value={playerName}
+                          onChange={(e) => setPlayerName(e.target.value)}
+                          className="input-field"
+                          required
                         />
-                        Make room private
-                      </label>
-                    </div>
+                        
+                        <div className="button-group">
+                          <button type="submit" className="btn">Continue</button>
+                        </div>
+                      </form>
+                    </>
+                  )}
 
-                    <div className="button-group">
-                      <button type="submit" className="btn">Create Room</button>
-                      <button type="button" className="btn" onClick={handleJoinRoom}>Join Room</button>
+                  {currentStep === "choice" && (
+                    <>
+                      <p className="subtitle">Hello, {playerName}! What would you like to do?</p>
+                      <div className="button-group">
+                        <button type="button" className="btn" onClick={() => setCurrentStep("create")}>
+                          Create Room
+                        </button>
+                        <button type="button" className="btn" onClick={() => setCurrentStep("join")}>
+                          Join Room
+                        </button>
+                      </div>
                       <button 
                         type="button" 
-                        className="btn public-rooms-btn" 
-                        onClick={() => setShowPublicRooms(!showPublicRooms)}
+                        className="btn back-btn" 
+                        onClick={() => setCurrentStep("name")}
                       >
-                        {showPublicRooms ? 'Hide' : 'Show'} Public Rooms
+                        ← Back
                       </button>
-                    </div>
-                  </form>
+                    </>
+                  )}
 
-                  {showPublicRooms && (
-                    <div className="public-rooms-section">
-                      <h3>Public Rooms</h3>
-                      {publicRooms.length === 0 ? (
-                        <p className="no-rooms">No public rooms available</p>
-                      ) : (
-                        <div className="public-rooms-list">
-                          {publicRooms.map((room) => (
-                            <div key={room.roomCode} className="public-room-item">
-                              <div className="room-info">
-                                <span className="room-name-display">{room.roomName}</span>
-                                <span className="room-code-display">Code: {room.roomCode}</span>
-                                <span className="room-leader">Leader: {room.leader}</span>
-                                <span className="room-players">{room.players.length} players</span>
-                                <span className="room-created">{formatTimeAgo(room.createdAt)}</span>
-                              </div>
-                              <button 
-                                className="join-public-btn"
-                                onClick={() => handleJoinPublicRoom(room.roomCode)}
-                                disabled={room.players.length >= MAX_PLAYERS}
-                              >
-                                {room.players.length >= MAX_PLAYERS ? 'Full' : 'Join'}
-                              </button>
-                            </div>
-                          ))}
+                  {currentStep === "create" && (
+                    <>
+                      <p className="subtitle">Create a new room</p>
+                      <form className="new-player-form" onSubmit={handleCreateRoom}>
+                        <input
+                          type="text"
+                          placeholder="Room name (optional)"
+                          value={roomName}
+                          onChange={(e) => setRoomName(e.target.value)}
+                          className="input-field"
+                        />
+                        
+                        <div className="privacy-options">
+                          <label className="privacy-label">
+                            <input
+                              type="checkbox"
+                              checked={isPrivate}
+                              onChange={(e) => setIsPrivate(e.target.checked)}
+                              className="privacy-checkbox"
+                            />
+                            Make room private
+                          </label>
+                        </div>
+
+                        <div className="button-group">
+                          <button type="submit" className="btn">Create Room</button>
+                        </div>
+                      </form>
+                      <button 
+                        type="button" 
+                        className="btn back-btn" 
+                        onClick={() => setCurrentStep("choice")}
+                      >
+                        ← Back
+                      </button>
+                    </>
+                  )}
+
+                  {currentStep === "join" && (
+                    <>
+                      <p className="subtitle">Join an existing room</p>
+                      
+                      {!joinMethod && (
+                        <div className="button-group">
+                          <button type="button" className="btn" onClick={() => setJoinMethod("code")}>
+                            Enter Room Code
+                          </button>
+                          <button type="button" className="btn" onClick={() => setJoinMethod("public")}>
+                            Browse Public Rooms
+                          </button>
                         </div>
                       )}
-                    </div>
+
+                      {joinMethod === "code" && (
+                        <form className="new-player-form" onSubmit={handleJoinRoom}>
+                          <input
+                            type="text"
+                            placeholder="Enter room code"
+                            value={roomCode}
+                            onChange={(e) => setRoomCode(e.target.value)}
+                            className="input-field"
+                            required
+                          />
+                          
+                          <div className="button-group">
+                            <button type="submit" className="btn">Join Room</button>
+                          </div>
+                        </form>
+                      )}
+
+                      {joinMethod === "public" && (
+                        <div className="public-rooms-section">
+                          <h3>Public Rooms</h3>
+                          {publicRooms.length === 0 ? (
+                            <p className="no-rooms">No public rooms available</p>
+                          ) : (
+                            <div className="public-rooms-list">
+                              {publicRooms.map((room) => (
+                                <div key={room.roomCode} className="public-room-item">
+                                  <div className="room-info">
+                                    <span className="room-name-display">{room.roomName}</span>
+                                    <span className="room-code-display">Code: {room.roomCode}</span>
+                                    <span className="room-leader">Leader: {room.leader}</span>
+                                    <span className="room-players">{room.players.length} players</span>
+                                    <span className="room-created">{formatTimeAgo(room.createdAt)}</span>
+                                  </div>
+                                  <button 
+                                    className="join-public-btn"
+                                    onClick={() => handleJoinPublicRoom(room.roomCode)}
+                                    disabled={room.players.length >= MAX_PLAYERS}
+                                  >
+                                    {room.players.length >= MAX_PLAYERS ? 'Full' : 'Join'}
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      <button 
+                        type="button" 
+                        className="btn back-btn" 
+                        onClick={() => {
+                          setJoinMethod("");
+                          setCurrentStep("choice");
+                        }}
+                      >
+                        ← Back
+                      </button>
+                    </>
                   )}
                 </div>
               </div>
@@ -354,6 +445,8 @@ export default function App() {
                     setIsLeader(false);
                     setPlayers([]);
                     setJoinError("");
+                    setCurrentStep("name");
+                    setJoinMethod("");
                     if (socket) {
                       socket.emit("leave-room", { roomCode, playerName });
                     }
