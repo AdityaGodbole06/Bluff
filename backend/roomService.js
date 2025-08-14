@@ -21,10 +21,15 @@ class RoomService {
   // Get all public rooms
   static async getPublicRooms() {
     try {
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000); // 1 hour ago
+      
       const rooms = await Room.find({ 
         isPrivate: false, 
-        isGameActive: false 
+        isGameActive: false,
+        createdAt: { $gte: oneHourAgo }, // Only rooms created in the last hour
+        leader: { $not: { $regex: /^TestPlayer/i } } // Exclude rooms with leaders starting with "TestPlayer"
       }).select('roomCode roomName leader players createdAt');
+      
       return rooms;
     } catch (error) {
       throw error;

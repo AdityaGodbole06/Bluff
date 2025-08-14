@@ -62,9 +62,9 @@ body {
   background: rgba(20, 20, 20, 0.85);
   border-radius: 1rem;
   padding: 4rem 3rem;
-  max-width: 700px;
+  max-width: 800px;
   width: 100%;
-  min-height: 420px;
+  min-height: 500px;
   text-align: center;
   box-shadow:
     0 0 15px rgba(0, 123, 255, 0.2),
@@ -76,7 +76,7 @@ body {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 1rem;
+  gap: 1.5rem;
 }
 
 
@@ -121,19 +121,21 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1rem;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 400px;
 }
 
 .welcome-container .input-field {
   border: 1px solid hsl(200, 100%, 50%);
   background-color: hsl(200, 100%, 30%);
   color: hsl(200, 100%, 90%);
-  max-width: 300px;
-  padding: 0.75rem 1rem;
+  max-width: 400px;
+  padding: 1rem 1.25rem;
   font-size: 1.1rem;
   width: 100%;
   border-radius: 8px;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0;
 }
 
 input::placeholder {
